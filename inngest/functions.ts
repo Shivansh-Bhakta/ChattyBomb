@@ -1,4 +1,10 @@
+import { processInbound } from "@/lib/ai/pipeline";
 import { inngest } from "@/lib/queue";
 
-// Inngest functions are thin wrappers; logic lives in lib/ so MOCK_MODE can call it inline.
-export const functions: ReturnType<typeof inngest.createFunction>[] = [];
+// Thin wrappers; logic lives in lib/ so MOCK_MODE can call it inline. Retries with backoff come from Inngest.
+export const functions = [
+  inngest.createFunction(
+    { id: "process-inbound", retries: 3, triggers: [{ event: "message.received" }], concurrency: { key: "event.data.tenantId", limit: 5 } },
+    async ({ event }) => processInbound(event.data as { tenantId: string; messageId: string }),
+  ),
+];

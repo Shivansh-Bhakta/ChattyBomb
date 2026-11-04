@@ -2,6 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { applyStatuses, ingestMessages } from "@/lib/channels/inbound";
 import { whatsapp } from "@/lib/channels/whatsapp";
 import { secret } from "@/lib/env";
+import "@/lib/ai/pipeline"; // registers the message.received handler (inline in MOCK_MODE)
 
 const MAX_BODY = 1_000_000;
 

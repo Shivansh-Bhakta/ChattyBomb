@@ -36,19 +36,19 @@ insert into messages (tenant_id, conversation_id, direction, sender_type, body, 
   ('10000000-0000-0000-0000-00000000000b', '40000000-0000-0000-0000-0000000000b1', 'inbound', 'contact', 'Haircut kitne ka hai?', 'seed-wamid-4', now() - interval '1 day'),
   ('10000000-0000-0000-0000-00000000000b', '40000000-0000-0000-0000-0000000000b1', 'outbound', 'ai', 'Haircut Rs 400 se shuru hota hai. Appointment book karein?', 'seed-wamid-5', now() - interval '1 day');
 
--- PLACEHOLDER rates for local/dev only. The platform owner sets real prices in /admin (M10).
+-- Dev/test rates. Voyage, Meta and FX are PLACEHOLDERS; Anthropic rows are list prices to verify. The platform owner sets real prices in /admin (M10).
 -- Keys: anthropic:<model>:{input,output,cache_read,cache_write}_per_mtok, voyage:<model>:per_mtok,
 --       meta:<category>:<country> (per_message), fx:USD_INR (unit inr_per_usd).
 insert into rates (key, value, currency, unit, effective_from, note) values
   ('fx:USD_INR', 85, 'INR', 'inr_per_usd', '2026-01-01', 'PLACEHOLDER'),
-  ('anthropic:claude-haiku-5-5:input_per_mtok', 1, 'USD', 'per_mtok', '2026-01-01', 'PLACEHOLDER'),
-  ('anthropic:claude-haiku-5-5:output_per_mtok', 5, 'USD', 'per_mtok', '2026-01-01', 'PLACEHOLDER'),
-  ('anthropic:claude-haiku-5-5:cache_read_per_mtok', 0.1, 'USD', 'per_mtok', '2026-01-01', 'PLACEHOLDER'),
-  ('anthropic:claude-haiku-5-5:cache_write_per_mtok', 1.25, 'USD', 'per_mtok', '2026-01-01', 'PLACEHOLDER'),
-  ('anthropic:claude-sonnet-5-5:input_per_mtok', 3, 'USD', 'per_mtok', '2026-01-01', 'PLACEHOLDER'),
-  ('anthropic:claude-sonnet-5-5:output_per_mtok', 15, 'USD', 'per_mtok', '2026-01-01', 'PLACEHOLDER'),
-  ('anthropic:claude-sonnet-5-5:cache_read_per_mtok', 0.3, 'USD', 'per_mtok', '2026-01-01', 'PLACEHOLDER'),
-  ('anthropic:claude-sonnet-5-5:cache_write_per_mtok', 3.75, 'USD', 'per_mtok', '2026-01-01', 'PLACEHOLDER'),
+  ('anthropic:claude-haiku-5-5:input_per_mtok', 0.10, 'USD', 'per_mtok', '2026-01-01', 'list price (Anthropic table cached 2026-10-06); verify'),
+  ('anthropic:claude-haiku-5-5:output_per_mtok', 0.50, 'USD', 'per_mtok', '2026-01-01', 'list price; verify'),
+  ('anthropic:claude-haiku-5-5:cache_read_per_mtok', 0.01, 'USD', 'per_mtok', '2026-01-01', 'ASSUMED 0.1x input; verify'),
+  ('anthropic:claude-haiku-5-5:cache_write_per_mtok', 0.125, 'USD', 'per_mtok', '2026-01-01', 'ASSUMED 1.25x input; verify'),
+  ('anthropic:claude-opus-5-5:input_per_mtok', 4, 'USD', 'per_mtok', '2026-01-01', 'list price; verify'),
+  ('anthropic:claude-opus-5-5:output_per_mtok', 20, 'USD', 'per_mtok', '2026-01-01', 'list price; verify'),
+  ('anthropic:claude-opus-5-5:cache_read_per_mtok', 0.20, 'USD', 'per_mtok', '2026-01-01', 'list price; verify'),
+  ('anthropic:claude-opus-5-5:cache_write_per_mtok', 5, 'USD', 'per_mtok', '2026-01-01', 'ASSUMED 1.25x input; verify'),
   ('voyage:voyage-3.5-lite:per_mtok', 0.02, 'USD', 'per_mtok', '2026-01-01', 'PLACEHOLDER'),
   ('meta:marketing:IN', 0.80, 'INR', 'per_message', '2026-01-01', 'PLACEHOLDER'),
   ('meta:utility:IN', 0.12, 'INR', 'per_message', '2026-01-01', 'PLACEHOLDER'),

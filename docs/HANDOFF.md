@@ -25,3 +25,9 @@
 - Run: `npm test` (lib/channels/whatsapp.test.ts); in the app, reply from /inbox (mock send). Real: set WHATSAPP_APP_SECRET, WHATSAPP_VERIFY_TOKEN, MOCK_MODE=false, store the channel token encrypted.
 - Skipped/unchecked: webhook rate limiting (M13), media messages stored as "[type message]" only, Graph API version default v23.0 unverified, real Meta send never exercised, template send UI (M8).
 - Next: M5 documents + RAG + AI replies + handoff + eval.
+
+## M5: documents, RAG, AI replies, handoff, eval
+- Done: /documents upload (PDF/TXT/MD/CSV ≤10 MB) → chunk → embed (`EMBEDDING_MODEL`/`EMBEDDING_DIM`, throws on dim mismatch) → pgvector; pipeline classify (Haiku 5.5) → retrieve → answer only from docs (Opus 5.5, prompt caching, structured output) or hand off (complaint/refund, medical/legal, no docs, low confidence) with summary; metered + audit-logged; Inngest `process-inbound`.
+- Run: `npm test` (lib/ai/ai.test.ts); `npm run eval` (MOCK_MODE=true: 18/20, the two misses are the lexical mock; MOCK_MODE=false calls Anthropic + Voyage and costs money).
+- Skipped/unchecked: no real Anthropic/Voyage call ever made; retrieval/confidence thresholds (0.35/0.6) untuned; no holding message to the customer on handoff; AI-suggested replies in the inbox; leads saving (M8); scanned PDFs (no OCR); ingestion runs inline in the upload request.
+- Next: M6 Slack adapter.

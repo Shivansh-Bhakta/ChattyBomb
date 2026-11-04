@@ -10,7 +10,10 @@ const schema = z
     NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional(),
     ANTHROPIC_API_KEY: z.string().optional(),
     AI_CLASSIFY_MODEL: z.string().default("claude-haiku-5-5"),
-    AI_ANSWER_MODEL: z.string().default("claude-sonnet-5-5"),
+    AI_ANSWER_MODEL: z.string().default("claude-opus-5-5"),
+    AI_MIN_RETRIEVAL_SCORE: z.coerce.number().min(0).max(1).optional(),
+    AI_MIN_CONFIDENCE: z.coerce.number().min(0).max(1).default(0.6),
+    SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
     VOYAGE_API_KEY: z.string().optional(),
     EMBEDDING_MODEL: z.string().default("voyage-3.5-lite"),
     EMBEDDING_DIM: z.coerce.number().int().positive().default(1024),
@@ -23,7 +26,11 @@ const schema = z
     for (const k of ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY"] as const) {
       if (!e[k]) ctx.addIssue({ code: "custom", path: [k], message: "required when MOCK_MODE=false" });
     }
-  });
+  })
+
+  // shortcut: 0.35 is a starting guess for voyage cosine scores, tune with `npm run eval` on real data.
+  // Mock embeddings are lexical and score lower, so mock mode gets its own default.
+  .transform((e) => ({ ...e, AI_MIN_RETRIEVAL_SCORE: e.AI_MIN_RETRIEVAL_SCORE ?? (e.MOCK_MODE ? 0.15 : 0.35) }));
 
 export type Env = z.infer<typeof schema>;
 let cached: Env | undefined;
@@ -37,7 +44,7 @@ export function env(): Env {
 export const mockAuthAllowed = () => env().MOCK_MODE && env().NODE_ENV !== "production";
 
 /** Fetches a secret by name only when a real call needs it. */
-export function secret(name: "ANTHROPIC_API_KEY" | "VOYAGE_API_KEY" | "WHATSAPP_APP_SECRET" | "WHATSAPP_VERIFY_TOKEN"): string {
+export function secret(name: "ANTHROPIC_API_KEY" | "VOYAGE_API_KEY" | "SUPABASE_SERVICE_ROLE_KEY" | "WHATSAPP_APP_SECRET" | "WHATSAPP_VERIFY_TOKEN"): string {
   const v = env()[name];
   if (!v) throw new Error(`${name} is not set`);
   return v;
