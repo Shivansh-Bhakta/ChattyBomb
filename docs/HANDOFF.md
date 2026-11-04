@@ -1,5 +1,5 @@
-- Changed: M0 docs only: CLAUDE.md, docs/DATA_MODEL.md, docs/ARCHITECTURE.md. No code.
+- Changed: M0 docs approved; embedding model is now config (`EMBEDDING_MODEL=voyage-3.5-lite`).
 - Run: nothing to run yet.
 - Next: M1: scaffold Next.js, Supabase auth, tenant onboarding, migrations with RLS, seed data.
-- Manual: approve M0; confirm Voyage for embeddings and Inngest for jobs; create Supabase + Vercel projects before M1 previews.
-- Open: email alert provider (Resend vs SMTP) decided in M10.
+- Blocked: `chunks.embedding` dimension unconfirmed; docs.voyageai.com is blocked by the sandbox network (403).
+- Manual: allow docs.voyageai.com in environment network settings (or tell me the dimension from Voyage docs); create Supabase + Vercel projects.

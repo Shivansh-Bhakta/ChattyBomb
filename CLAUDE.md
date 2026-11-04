@@ -27,7 +27,9 @@ Follow ponytail-AGENTS.md for every code change.
 ## Stack
 Next.js App Router + TypeScript + Tailwind + shadcn/ui · Supabase (Postgres, Auth,
 Realtime, Storage, pgvector) · Inngest (queues, schedules, reminders) · Zod · Vitest ·
-Razorpay Subscriptions · Anthropic API · Voyage embeddings · Vercel.
+Razorpay Subscriptions · Anthropic API · Voyage embeddings (`EMBEDDING_MODEL`,
+default `voyage-3.5-lite`; never hardcode model names or prices) · Vercel.
+Approved: one tenant per user; a conversation counts once per calendar month.
 
 ## Architecture summary
 Details: `docs/ARCHITECTURE.md`. Schema: `docs/DATA_MODEL.md`.
