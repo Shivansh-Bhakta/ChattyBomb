@@ -1,5 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireMember } from "@/lib/auth";
 import { asUser } from "@/lib/db";
@@ -18,4 +19,52 @@ export async function setSlackChannel(form: FormData) {
     );
   });
   revalidatePath("/settings/channels");
+}
+
+const imapForm = z.object({
+  address: z.string().trim().toLowerCase().email(),
+  user: z.string().trim().min(1).max(320),
+  pass: z.string().min(1).max(200),
+  imapHost: z.string().trim().min(1).max(253),
+  imapPort: z.coerce.number().int().min(1).max(65535),
+  smtpHost: z.string().trim().min(1).max(253),
+  smtpPort: z.coerce.number().int().min(1).max(65535),
+});
+
+/** IMAP/SMTP fallback with an app password. Tests the login before saving; the password is stored encrypted. */
+export async function connectImap(form: FormData) {
+  const me = await requireMember();
+  if (me.role !== "owner") throw new Error("only owners can connect channels");
+  const f = imapForm.safeParse(Object.fromEntries(form));
+  if (!f.success) redirect("/settings/channels?error=imap_invalid");
+  const { imapCreds } = await import("@/lib/channels/email");
+  const { saveEmailChannel, testImap } = await import("@/lib/channels/email-connect");
+  const creds = imapCreds.parse({
+    user: f.data.user, pass: f.data.pass,
+    imap: { host: f.data.imapHost, port: f.data.imapPort, secure: f.data.imapPort === 993 },
+    smtp: { host: f.data.smtpHost, port: f.data.smtpPort, secure: f.data.smtpPort === 465 },
+  });
+  let error = "";
+  try {
+    await testImap(creds);
+    await saveEmailChannel(me.tenantId, me.id, "imap", f.data.address, creds);
+  } catch (e) {
+    console.error("[connectImap]", (e as Error).message);
+    error = "imap_failed";
+  }
+  revalidatePath("/settings/channels");
+  redirect(error ? `/settings/channels?error=${error}` : "/settings/channels?connected=imap");
+}
+
+/** "Check email now": polls one email channel of the caller's tenant. */
+export async function checkEmailNow(form: FormData) {
+  const me = await requireMember();
+  const channelId = z.guid().parse(form.get("channelId"));
+  const visible = await asUser(me.id, async (db) => (await db.query(`select 1 from channels where id = $1 and type = 'email'`, [channelId])).rowCount);
+  if (!visible) throw new Error("channel not found");
+  await import("@/lib/ai/pipeline");
+  const { pollEmail } = await import("@/lib/channels/email-poll");
+  await pollEmail(channelId).catch((e) => console.error("[checkEmailNow]", (e as Error).message));
+  revalidatePath("/settings/channels");
+  revalidatePath("/inbox");
 }

@@ -37,3 +37,9 @@
 - Run: `npm test` (lib/channels/slack.test.ts); app: /settings/channels → Connect Slack (mock install). Real: set SLACK_SIGNING_SECRET, SLACK_CLIENT_ID, SLACK_CLIENT_SECRET, APP_URL; Slack app needs scopes chat:write, im:history, channels:history, groups:history and event `message.im`, `message.channels`, `message.groups` → `{APP_URL}/api/webhooks/slack`.
 - Skipped/unchecked: Slack user names (contacts show the Slack user id; needs users:read), files/attachments, uninstall event, real Slack never called.
 - Next: M7 email adapter.
+
+## M7: email adapter
+- Done: `lib/channels/email.ts` (MIME parse via mailparser, thread on References root, quoted-text strip, loop guards for own/auto/list mail, send via Gmail API or SMTP with Re: subject + In-Reply-To/References), Gmail OAuth (`/api/google/install` → `/api/google/oauth`, testing mode), IMAP/SMTP app-password connect with "Test connection", polling (`pollEmail`, Inngest cron every 2 min, "Check email now"), `docs/EMAIL_SETUP.md`. Adapter interface unchanged; fixed outbound recipient to depend on channel.
+- Run: `npm test` (lib/channels/email.test.ts); app: /settings/channels → Connect Gmail (mock) → Check email now (reads the in-memory mock mailbox).
+- Skipped/unchecked: Gmail Pub/Sub push (polling only), attachments, HTML-only emails rely on mailparser's text conversion, STARTTLS port 587 not auto-detected, real Gmail/IMAP/SMTP never exercised.
+- Next: M8 leads, intent tagging, reminders, WhatsApp templates.

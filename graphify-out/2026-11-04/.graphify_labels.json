@@ -5,12 +5,10 @@
   "3": "Database Schema",
   "4": "DB Access Helpers",
   "5": "TypeScript Config",
-  "6": "Env and Encryption",
   "7": "Local DB Reset",
   "8": "NPM Scripts",
   "9": "Root Layout",
   "10": "Supabase Auth Shim",
-  "11": "Inbox Page",
   "12": "PostCSS Config",
   "13": "Seed Data"
 }

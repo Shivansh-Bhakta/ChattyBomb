@@ -9,3 +9,6 @@ export async function mockSend(channel: string, target: SendTarget, msg: Outboun
   mockOutbox.push({ channel, target, msg, providerMessageId });
   return { providerMessageId };
 }
+
+/** MOCK_MODE mailbox: raw RFC 822 messages waiting to be "polled", keyed by channel address. */
+export const mockInbox = new Map<string, string[]>();

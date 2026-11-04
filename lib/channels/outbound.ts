@@ -44,7 +44,7 @@ export async function sendMessage(tenantId: string, conversationId: string, msg:
   try {
     const { providerMessageId } = await adapter.send(
       { channelExternalId: c.external_id, credentials: env().MOCK_MODE || !c.credentials_encrypted ? null : decrypt(c.credentials_encrypted),
-        to: c.phone ?? c.email ?? c.external_thread_id, threadId: c.external_thread_id, config: c.config },
+        to: (c.type === "email" ? c.email : c.type === "whatsapp" ? c.phone : null) ?? c.external_thread_id, threadId: c.external_thread_id, config: c.config },
       msg,
     );
     await asService(async (db) => {
