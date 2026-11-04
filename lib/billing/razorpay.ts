@@ -2,6 +2,7 @@ import { createHash, createHmac, randomUUID, timingSafeEqual } from "node:crypto
 import { z } from "zod";
 import { asService } from "../db.ts";
 import { env, secret } from "../env.ts";
+import { PLAN_LIMITS } from "../tenants.ts";
 
 // Razorpay REST + webhook shapes are from Razorpay's Subscriptions docs as of 2026 (not verifiable offline: re-check on first live test).
 const API = "https://api.razorpay.com/v1";
@@ -82,14 +83,17 @@ export async function applyRazorpayEvent(raw: string, eventId: string) {
   return asService(async (db) => { // scope: webhook-lookup (subscription resolved by our stored razorpay id, then tenant-scoped writes)
     const fresh = await db.query(`insert into webhook_events (provider, event_id) values ('razorpay', $1) on conflict do nothing`, [eventId]);
     if (!fresh.rowCount) return { applied: false, reason: "duplicate" };
-    const { rows: [s] } = await db.query(`select id, tenant_id from subscriptions where razorpay_subscription_id = $1 for update`, [sub.id]);
+    const { rows: [s] } = await db.query(`select id, tenant_id, plan from subscriptions where razorpay_subscription_id = $1 for update`, [sub.id]);
     if (!s) return { applied: false, reason: "unknown subscription" };
     const t = s.tenant_id as string;
     const setSub = (status: string) => db.query(
       `update subscriptions set status = $3::subscription_status, current_period_start = coalesce($4, current_period_start), current_period_end = coalesce($5, current_period_end),
          cancelled_at = case when $3::subscription_status = 'cancelled' then now() else cancelled_at end where id = $1 and tenant_id = $2`,
       [s.id, t, status, sub.current_start, sub.current_end]);
-    const setTenant = (status: string) => db.query(`update tenants set status = $2 where id = $1`, [t, status]);
+    const setTenant = (status: string) => status === "active"
+      // A paid subscription also switches the tenant to the plan (and limit) it pays for.
+      ? db.query(`update tenants set status = 'active', plan = $2, conversation_limit = $3 where id = $1`, [t, s.plan, PLAN_LIMITS[s.plan as keyof typeof PLAN_LIMITS]])
+      : db.query(`update tenants set status = $2 where id = $1`, [t, status]);
     switch (e.event) {
       case "subscription.authenticated":
       case "subscription.activated":
