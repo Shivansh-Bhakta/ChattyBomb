@@ -27,8 +27,8 @@ Follow ponytail-AGENTS.md for every code change.
 ## Stack
 Next.js App Router + TypeScript + Tailwind + shadcn/ui · Supabase (Postgres, Auth,
 Realtime, Storage, pgvector) · Inngest (queues, schedules, reminders) · Zod · Vitest ·
-Razorpay Subscriptions · Anthropic API · Voyage embeddings (`EMBEDDING_MODEL`,
-default `voyage-3.5-lite`; never hardcode model names or prices) · Vercel.
+Razorpay Subscriptions · Anthropic API · Voyage embeddings (`EMBEDDING_MODEL=voyage-3.5-lite`,
+`EMBEDDING_DIM=1024`; never hardcode model names or prices) · Vercel.
 Approved: one tenant per user; a conversation counts once per calendar month.
 
 ## Architecture summary
@@ -68,7 +68,7 @@ Details: `docs/ARCHITECTURE.md`. Schema: `docs/DATA_MODEL.md`.
 Added in M1 (dev, test, migrate, seed).
 
 ## Milestones
-M0 plan/docs ✅ · M1 scaffold+auth+RLS · M2 cost ledger · M3 inbox UI · M4 WhatsApp ·
+M0 plan/docs ✅ approved · M1 scaffold+auth+RLS · M2 cost ledger · M3 inbox UI · M4 WhatsApp ·
 M5 RAG+AI · M6 Slack · M7 Email · M8 leads/reminders · M9 usage/audit/deletion ·
 M10 admin console · M11 Razorpay/GST · M12 pilot report · M13 hardening.
 
