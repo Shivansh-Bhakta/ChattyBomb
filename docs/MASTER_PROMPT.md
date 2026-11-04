@@ -89,3 +89,49 @@ Next.js App Router + TypeScript + Tailwind + shadcn/ui; Supabase (Postgres, Auth
 
 ## 11. Working agreement
 Begin with M0 only. Ask at most 5 clarifying questions in one message if truly blocking; otherwise state assumptions in one line each and proceed. At each milestone, list what I must do manually (API keys, Meta/Google/Slack app setup, approvals).
+
+## 12. Extra rules
+
+### Secrets and mock mode
+- Use environment variables for every secret. Create .env.example with variable
+  names only (no values), and make sure all .env* files are gitignored.
+- Never ask me to paste a secret into chat. Refer to secrets by name only,
+  for example ANTHROPIC_API_KEY.
+- Build mock/fake adapters for WhatsApp, Slack, Email, Razorpay, and the
+  Anthropic call. Switch with MOCK_MODE=true so everything runs end to end
+  without real keys. When MOCK_MODE=false, use the real services. I will add
+  real keys later, one service at a time.
+- Production secrets live in Vercel/Supabase settings, never in the repo or
+  in the cloud session environment.
+
+### Connect channels onboarding
+- Build a "Connect channels" wizard per channel (WhatsApp, Slack, Email) showing
+  status: not connected / pending / connected / error.
+- Each step has a "Test connection" button and plain instructions for what the
+  business must do on Meta, Google and Slack.
+- Never ask the business for passwords. Store only OAuth or API tokens,
+  encrypted at rest.
+- Add an admin-assisted mode: from /admin I can enter or connect a customer's
+  channel credentials for them during a setup call, with every action
+  audit-logged.
+- For Email, support Gmail OAuth (testing mode first) and IMAP/SMTP with an app
+  password as a fallback. For WhatsApp, document both manual setup (for the
+  first pilot) and Embedded Signup (for later self-serve).
+
+### Cloud session constraints
+- Assume the sandbox cannot reach Meta, Slack, Google, Razorpay or the
+  Anthropic API. Develop and test against mocks and a local test database.
+- Real integration testing happens on a Vercel preview deployment, and I will
+  paste back any error lines.
+- Keep every session to one milestone. At the end update docs/HANDOFF.md with
+  at most 5 lines: what changed, how to run, what is next, and what I must do
+  manually.
+
+### Before real customers (add to the M13 checklist)
+- Security review of auth, RLS policies, token encryption and the admin console.
+- Privacy policy, terms of service and a data processing agreement for review
+  by a lawyer.
+- Meta business verification and WhatsApp template approvals.
+- Google verification for production Gmail access.
+- Error monitoring, backups and uptime alerts.
+- Start with one supervised pilot business before wider launch.
