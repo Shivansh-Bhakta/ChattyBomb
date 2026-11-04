@@ -1,5 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireMember } from "@/lib/auth";
 import { asUser, type Db } from "@/lib/db";
@@ -62,4 +63,22 @@ export async function addNote(form: FormData) {
     if (!rowCount) throw new Error("conversation not found");
   });
   revalidatePath("/inbox");
+}
+
+/** Agent reply on the conversation's channel. Outside the WhatsApp 24h window only templates may be sent (M8). */
+export async function sendReply(form: FormData) {
+  const me = await requireMember();
+  const conversationId = id.parse(form.get("conversationId"));
+  const text = z.string().trim().min(1).max(4096).parse(form.get("body"));
+  const { sendMessage, WindowClosedError } = await import("@/lib/channels/outbound");
+  let error = "";
+  try {
+    const { messageId } = await sendMessage(me.tenantId, conversationId, { kind: "text", text }, { type: "agent", userId: me.id });
+    await asUser(me.id, (db) => audit(db, me.tenantId, me.id, "human.reply", conversationId, { message_id: messageId }));
+  } catch (e) {
+    error = e instanceof WindowClosedError ? "window" : "send";
+    console.error("[sendReply]", (e as Error).message);
+  }
+  revalidatePath("/inbox");
+  if (error) redirect(`/inbox?c=${conversationId}&error=${error}`);
 }

@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 export default defineConfig({
   resolve: { alias: { "@": fileURLToPath(new URL(".", import.meta.url)) } },
   test: {
-    globalSetup: ["./test/global-setup.ts"],
+    setupFiles: ["./test/setup.ts"],
     env: {
       MOCK_MODE: "true",
       DATABASE_URL: process.env.TEST_DATABASE_URL ?? "postgres://postgres:postgres@localhost:5432/chattybomb_test",
