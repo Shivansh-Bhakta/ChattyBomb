@@ -1,9 +1,10 @@
 import type { Channel } from "../metering.ts";
 import type { ChannelAdapter } from "./types.ts";
+import { email } from "./email.ts";
 import { slack } from "./slack.ts";
 import { whatsapp } from "./whatsapp.ts";
 
-const adapters: Partial<Record<Channel, ChannelAdapter>> = { whatsapp, slack };
+const adapters: Partial<Record<Channel, ChannelAdapter>> = { whatsapp, slack, email };
 
 export function adapterFor(type: Channel): ChannelAdapter {
   const a = adapters[type];
