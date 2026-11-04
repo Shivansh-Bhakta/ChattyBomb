@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { addNote, assign, sendReply, setAiPaused, setStatus } from "@/app/actions/inbox";
+import { createReminder } from "@/app/actions/followups";
+import { addNote, assign, sendReply, sendTemplate, setAiPaused, setStatus } from "@/app/actions/inbox";
+import { templatesOf } from "@/lib/channels/templates";
 import { adapterFor } from "@/lib/channels";
 import { LiveRefresh } from "@/components/live-refresh";
 import { requireMember } from "@/lib/auth";
@@ -101,7 +103,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
                 </li>
               ))}
             </ol>
-            {sp.error && <p className="bg-red-50 p-2 text-sm text-red-700">{sp.error === "window" ? "The 24-hour WhatsApp window is closed: only approved templates can be sent." : "Sending failed. Check the channel connection."}</p>}
+            {sp.error && <p className="bg-red-50 p-2 text-sm text-red-700">{sp.error === "window" ? "The 24-hour WhatsApp window is closed: only approved templates can be sent." : sp.error === "reminder" ? "Could not schedule: add a message or a template, and a valid time." : "Sending failed. Check the channel connection."}</p>}
             {adapterFor(thread.conv.channel).canSendFreeform(thread.conv) ? (
               <form action={sendReply} className="flex gap-2 border-t border-slate-200 bg-white p-3">
                 <input type="hidden" name="conversationId" value={thread.conv.id} />
@@ -109,8 +111,31 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
                 <button className="btn">Send</button>
               </form>
             ) : (
-              <p className="border-t border-slate-200 bg-amber-50 p-3 text-sm text-amber-800">24-hour window closed. Only approved WhatsApp templates can be sent (coming in M8).</p>
+              <form action={sendTemplate} className="flex flex-wrap items-center gap-2 border-t border-slate-200 bg-amber-50 p-3 text-sm">
+                <input type="hidden" name="conversationId" value={thread.conv.id} />
+                <span className="text-amber-800">24-hour window closed: send an approved template.</span>
+                <select name="template" required className="input max-w-56">
+                  {templatesOf(thread.conv.channel_config).map((t) => <option key={t.name} value={t.name}>{t.name} ({t.category})</option>)}
+                </select>
+                <input name="params" placeholder="Parameters, separated by |" className="input max-w-64" />
+                <button className="btn">Send template</button>
+              </form>
             )}
+            {sp.reminder && <p className="bg-emerald-50 p-2 text-sm text-emerald-800">Reminder scheduled.</p>}
+            <details className="border-t border-slate-200 bg-white p-3 text-sm">
+              <summary className="cursor-pointer">Schedule a reminder / follow-up</summary>
+              <form action={createReminder} className="mt-2 flex flex-wrap gap-2">
+                <input type="hidden" name="conversationId" value={thread.conv.id} />
+                <select name="type" className="input max-w-40">{["callback", "appointment", "renewal", "follow_up"].map((t) => <option key={t} value={t}>{label(t)}</option>)}</select>
+                <input name="dueAt" type="datetime-local" required className="input max-w-56" />
+                <input name="message" placeholder="Message (used inside the 24h window)" className="input flex-1" />
+                {thread.conv.channel === "whatsapp" && (
+                  <select name="templateName" className="input max-w-56"><option value="">No template</option>
+                    {templatesOf(thread.conv.channel_config).map((t) => <option key={t.name} value={t.name}>{t.name}</option>)}</select>
+                )}
+                <button className="btn-ghost">Schedule</button>
+              </form>
+            </details>
             <form action={addNote} className="flex gap-2 border-t border-slate-200 bg-white p-3">
               <input type="hidden" name="conversationId" value={thread.conv.id} />
               <input name="body" required maxLength={5000} placeholder="Internal note (not sent to the customer)" className="input" />

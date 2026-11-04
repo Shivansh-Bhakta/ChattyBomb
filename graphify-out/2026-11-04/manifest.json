@@ -12,10 +12,10 @@
     "semantic_hash": ""
   },
   "app/(app)/layout.tsx": {
-    "mtime": 1793820620.652304,
-    "seen": 1793820874.6902952,
-    "ast_hash": "55ccd9e6d86109265a95472467ea1cac",
-    "semantic_hash": "55ccd9e6d86109265a95472467ea1cac"
+    "mtime": 1793821673.795625,
+    "seen": 1793821729.8278675,
+    "ast_hash": "2534dc26eb8b21752e12cce3297d09a6",
+    "semantic_hash": ""
   },
   "app/actions/auth.ts": {
     "mtime": 1793820665.112941,
@@ -96,9 +96,9 @@
     "semantic_hash": "ab9afbe7b7a4f39924b0e78208cb22a0"
   },
   "lib/env.ts": {
-    "mtime": 1793821388.2936652,
-    "seen": 1793821584.9274466,
-    "ast_hash": "924a241c0f69059b1c397a31f98368d7",
+    "mtime": 1793821628.5821073,
+    "seen": 1793821729.8280406,
+    "ast_hash": "5239229e191f8523d15f92ee073674f5",
     "semantic_hash": ""
   },
   "lib/supabase/server.ts": {
@@ -180,9 +180,9 @@
     "semantic_hash": "196114120d4479962c822f252098bc73"
   },
   "vitest.config.ts": {
-    "mtime": 1793821179.4717617,
-    "seen": 1793821584.9274776,
-    "ast_hash": "0c5cb7808ccb22585d0927369aae1060",
+    "mtime": 1793821628.5926921,
+    "seen": 1793821729.8281176,
+    "ast_hash": "cbd4db04453adc04fb45d46805782e33",
     "semantic_hash": ""
   },
   ".claude/skills/ponytail/SKILL.md": {
@@ -258,9 +258,9 @@
     "semantic_hash": ""
   },
   "docs/HANDOFF.md": {
-    "mtime": 1793821565.8644717,
-    "seen": 1793821584.9274864,
-    "ast_hash": "167cb3fc5b24216d6ccef495be2c6894",
+    "mtime": 1793821728.412468,
+    "seen": 1793821729.8281393,
+    "ast_hash": "6afdeaed40f0423e4db18c272539adde",
     "semantic_hash": ""
   },
   "app/(app)/documents/page.tsx": {
@@ -372,9 +372,9 @@
     "semantic_hash": ""
   },
   "lib/channels/index.ts": {
-    "mtime": 1793821087.1124828,
-    "seen": 1793821584.9274333,
-    "ast_hash": "bdb472257cff1e0fe415983909e64bc4",
+    "mtime": 1793821628.6167195,
+    "seen": 1793821729.8279676,
+    "ast_hash": "3ffbf7aec49b56c0e86c9683f3064ae7",
     "semantic_hash": ""
   },
   "lib/channels/mock.ts": {
@@ -447,6 +447,54 @@
     "mtime": 1793821371.41899,
     "seen": 1793821584.9274902,
     "ast_hash": "23c04189e82d2ef45a1d37d5ad65c184",
+    "semantic_hash": ""
+  },
+  "app/(app)/settings/channels/page.tsx": {
+    "mtime": 1793821673.7930133,
+    "seen": 1793821729.8278747,
+    "ast_hash": "8c8d0a04aa7d12419efc04076695b22f",
+    "semantic_hash": ""
+  },
+  "app/actions/channels.ts": {
+    "mtime": 1793821673.7884693,
+    "seen": 1793821729.8278816,
+    "ast_hash": "ce4625d0516d35920750f8a0fde96bd1",
+    "semantic_hash": ""
+  },
+  "app/api/slack/install/route.ts": {
+    "mtime": 1793821673.7836192,
+    "seen": 1793821729.827898,
+    "ast_hash": "49ef77ba608b55164ac0d3ca710534c3",
+    "semantic_hash": ""
+  },
+  "app/api/slack/oauth/route.ts": {
+    "mtime": 1793821673.7844694,
+    "seen": 1793821729.827901,
+    "ast_hash": "aa4d15e3c2beea90aa767822f2017063",
+    "semantic_hash": ""
+  },
+  "app/api/webhooks/slack/route.ts": {
+    "mtime": 1793821673.7882335,
+    "seen": 1793821729.8279033,
+    "ast_hash": "20831cdd93d4b07922b8a62c70dfff85",
+    "semantic_hash": ""
+  },
+  "lib/channels/slack-oauth.ts": {
+    "mtime": 1793821673.7804692,
+    "seen": 1793821729.8279765,
+    "ast_hash": "657c0adc054d9f1b63383b62ecb72dcd",
+    "semantic_hash": ""
+  },
+  "lib/channels/slack.test.ts": {
+    "mtime": 1793821700.2716446,
+    "seen": 1793821729.8279788,
+    "ast_hash": "4c691138de8dae8cc2e4a3bbd1910381",
+    "semantic_hash": ""
+  },
+  "lib/channels/slack.ts": {
+    "mtime": 1793821628.5955153,
+    "seen": 1793821729.8279812,
+    "ast_hash": "9b769aeaace2a0744b108586e47b0e9b",
     "semantic_hash": ""
   },
   "package-lock.json": {

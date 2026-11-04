@@ -68,3 +68,21 @@ export async function checkEmailNow(form: FormData) {
   revalidatePath("/settings/channels");
   revalidatePath("/inbox");
 }
+
+/** Owner lists the WhatsApp templates already approved in Meta (one "name,language,category" per line). */
+export async function setTemplates(form: FormData) {
+  const me = await requireMember();
+  const channelId = z.guid().parse(form.get("channelId"));
+  const { parseTemplateLines } = await import("@/lib/channels/templates");
+  let templates;
+  try {
+    templates = parseTemplateLines(z.string().max(20_000).parse(form.get("templates") ?? ""));
+  } catch {
+    redirect("/settings/channels?error=templates_invalid");
+  }
+  await asUser(me.id, async (db) => {
+    const { rowCount } = await db.query(`update channels set config = config || jsonb_build_object('templates', $2::jsonb) where id = $1 and type = 'whatsapp'`, [channelId, JSON.stringify(templates)]);
+    if (!rowCount) throw new Error("channel not found or not allowed");
+  });
+  revalidatePath("/settings/channels");
+}

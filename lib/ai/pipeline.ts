@@ -46,6 +46,15 @@ export async function processInbound({ tenantId, messageId }: { tenantId: string
   const chunks = await asService(async (db) => {
     await meter(db, c.usage);
     await db.query(`update messages set intent = $2 where id = $1`, [m.id, c.result.intent]);
+    if (c.result.intent === "sales_lead" || c.result.intent === "booking") {
+      await db.query(
+        `insert into leads (tenant_id, contact_id, conversation_id, name, phone, email, intent, source_channel)
+         select c.tenant_id, c.contact_id, c.id, ct.name, ct.phone, ct.email, $2, $3
+           from conversations c join contacts ct on ct.id = c.contact_id where c.id = $1
+         on conflict (conversation_id) where conversation_id is not null do nothing`,
+        [m.conversation_id, c.result.intent, m.channel],
+      );
+    }
     const needsDocs = c.result.intent !== "refund_complaint" && !c.result.sensitive;
     return needsDocs ? retrieve(db, tenantId, m.body, 5, m.conversation_id) : [];
   });

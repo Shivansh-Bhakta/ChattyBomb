@@ -43,3 +43,9 @@
 - Run: `npm test` (lib/channels/email.test.ts); app: /settings/channels → Connect Gmail (mock) → Check email now (reads the in-memory mock mailbox).
 - Skipped/unchecked: Gmail Pub/Sub push (polling only), attachments, HTML-only emails rely on mailparser's text conversion, STARTTLS port 587 not auto-detected, real Gmail/IMAP/SMTP never exercised.
 - Next: M8 leads, intent tagging, reminders, WhatsApp templates.
+
+## M8: leads, intent tagging, reminders, WhatsApp templates
+- Done: every inbound message is intent-tagged (M5); booking/sales enquiries save one lead per conversation (`/leads` with status); reminders (callback/appointment/renewal/follow-up) created from a conversation, sent by Inngest cron every 5 min, claimed before sending (never twice), free text in the 24h window else the chosen approved template, failures shown with reason (`/reminders`); approved-template list per WhatsApp channel in /settings/channels; "send template" in the inbox when the window is closed.
+- Run: `npm test` (lib/reminders.test.ts); app: Settings → add `appointment_reminder,en,utility` → Inbox → Schedule a reminder.
+- Skipped/unchecked: template sync from Meta (list is typed by the owner), template params are only the contact name for reminders, no recurring reminders, at-most-once delivery (a crash mid-send drops that reminder; it shows as sent).
+- Next: M9 tenant usage page, plan limits, audit log, tenant data deletion.
