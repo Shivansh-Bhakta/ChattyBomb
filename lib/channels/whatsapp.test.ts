@@ -93,11 +93,11 @@ describe("WhatsApp 24-hour window", () => {
   it("sends inside the window, then applies delivery statuses without downgrading", async () => {
     const [conv] = await q("select id from conversations where id = '40000000-0000-0000-0000-0000000000a1'");
     const { providerMessageId, messageId } = await sendMessage(TENANT_A, conv.id, { kind: "text", text: "We open 9-1 on Sunday." }, { type: "ai" });
-    await POST(waRequest(waStatus(providerMessageId, "read")));
-    await POST(waRequest(waStatus(providerMessageId, "delivered")));
+    await POST(waRequest(waStatus(providerMessageId!, "read")));
+    await POST(waRequest(waStatus(providerMessageId!, "delivered")));
     expect((await q("select status from messages where id = $1", [messageId]))[0].status).toBe("read");
     // Status for the same message id reported on another tenant's number changes nothing.
-    await POST(waRequest(waStatus(providerMessageId, "failed", "mock-phone-glow")));
+    await POST(waRequest(waStatus(providerMessageId!, "failed", "mock-phone-glow")));
     expect((await q("select status from messages where id = $1", [messageId]))[0].status).toBe("read");
   });
 

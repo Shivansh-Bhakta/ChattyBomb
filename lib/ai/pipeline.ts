@@ -20,7 +20,7 @@ export async function processInbound({ tenantId, messageId }: { tenantId: string
     const { rows: [m] } = await db.query(
       `select m.id, m.body, m.created_at, m.conversation_id, c.status, c.ai_paused, ch.type as channel,
               t.status as tenant_status, t.conversation_limit, t.overage_policy,
-              exists (select 1 from messages o where o.conversation_id = m.conversation_id and o.direction = 'outbound' and o.created_at >= m.created_at) as already_replied
+              exists (select 1 from messages o where o.conversation_id = m.conversation_id and o.direction = 'outbound' and o.status <> 'failed' and o.created_at >= m.created_at and o.idempotency_key is distinct from 'ai-reply:' || m.id::text) as already_replied
          from messages m join conversations c on c.id = m.conversation_id join channels ch on ch.id = c.channel_id join tenants t on t.id = m.tenant_id
         where m.id = $1 and m.tenant_id = $2 and m.direction = 'inbound'`,
       [messageId, tenantId],
@@ -70,7 +70,8 @@ export async function processInbound({ tenantId, messageId }: { tenantId: string
   const post = afterAnswer(a.result, env().AI_MIN_CONFIDENCE);
   if (post.handoff) return handoff(base, m.id, post.reason, c.result.summary);
 
-  const sent = await sendMessage(tenantId, base.conversationId, { kind: "text", text: a.result.answer }, { type: "ai" });
+  const sent = await sendMessage(tenantId, base.conversationId, { kind: "text", text: a.result.answer }, { type: "ai" }, { idempotencyKey: `ai-reply:${m.id}` });
+  if (sent.duplicate) return { outcome: "skipped", reason: "already_sent" };
   await asService((db) => db.query( // scope: tenant
     `insert into audit_log (tenant_id, actor_type, action, target_type, target_id, metadata) values ($1, 'ai', 'ai.reply', 'message', $2, $3)`,
     [tenantId, sent.messageId, { inbound_message_id: m.id, intent: c.result.intent, confidence: a.result.confidence, top_score: chunks[0]?.score }],
