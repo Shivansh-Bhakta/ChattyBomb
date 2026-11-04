@@ -65,7 +65,12 @@ Details: `docs/ARCHITECTURE.md`. Schema: `docs/DATA_MODEL.md`.
 - Shortcuts with known limits get a comment: `shortcut: <limit>, <when to upgrade>`.
 
 ## Commands
-Added in M1 (dev, test, migrate, seed).
+- Local DB (no Docker here): Postgres 16 + pgvector on localhost; `supabase/local-shim.sql`
+  fakes Supabase's auth schema/roles for local and tests only.
+- `npm run db:reset` (shim + migrations + seed, refuses non-local hosts) · `npm run dev`
+- `npm test` (Vitest; resets `chattybomb_test`) · `npm run typecheck` · `npm run eval`
+- Real Supabase: apply `supabase/migrations/*` with `supabase db push`; never the shim.
+- DB access: `asUser(userId, fn)` (RLS applies) or `asService(fn)` (bypasses RLS) in `lib/db.ts`.
 
 ## Milestones
 M0 plan/docs ✅ approved · M1 scaffold+auth+RLS · M2 cost ledger · M3 inbox UI · M4 WhatsApp ·
