@@ -75,15 +75,13 @@ error null, uploaded_by references users`
 
 ### chunks
 `id, tenant_id, document_id references documents on delete cascade, idx int, content text,
-token_count int, embedding vector(<EMBEDDING_DIM>)`
-- HNSW index on `embedding vector_cosine_ops`. Retrieval always filters `tenant_id`.
-- Embedding model comes from config (`EMBEDDING_MODEL`, default `voyage-3.5-lite`), never hardcoded.
-  The column size must equal the dimension the model actually returns. Code requests that
-  dimension explicitly and fails if the returned vector length differs.
-- **`<EMBEDDING_DIM>` is unconfirmed.** It must be the default dimension of `voyage-3.5-lite`
-  from docs.voyageai.com only, and the sandbox network blocks that site (403). Fill it in
-  here and in the M1 migration before writing any chunks. Changing the model or dimension
-  later means a new migration and re-embedding every chunk.
+token_count int, embedding vector(1024)`
+- HNSW index on `embedding vector_cosine_ops` (needs pgvector >= 0.5; verified locally on 0.6.0).
+  Retrieval always filters `tenant_id`.
+- Model and size are config: `EMBEDDING_MODEL=voyage-3.5-lite`, `EMBEDDING_DIM=1024`
+  (voyage-3.5-lite default per Voyage's API reference; it also supports 256/512/2048).
+  Code requests `output_dimension = EMBEDDING_DIM` and throws if a returned vector differs.
+  Changing either later means a new migration and re-embedding every chunk.
 
 ### leads
 `id, tenant_id, contact_id, conversation_id null, name, phone, email, intent,
