@@ -1,4 +1,4 @@
-import { checkEmailNow, connectImap, setSlackChannel, setTemplates } from "@/app/actions/channels";
+import { checkEmailNow, connectImap, connectWhatsApp, setSlackChannel, setTemplates } from "@/app/actions/channels";
 import { templatesOf } from "@/lib/channels/templates";
 import { requireMember } from "@/lib/auth";
 import { asUser } from "@/lib/db";
@@ -7,6 +7,7 @@ const MSG: Record<string, string> = {
   slack: "Slack connected.", slack_denied: "Slack install was cancelled.", slack_failed: "Slack install failed. Is this workspace already connected to another business?",
   gmail: "Gmail connected.", gmail_denied: "Google sign-in was cancelled.", gmail_failed: "Gmail connection failed.",
   templates_invalid: "Each template line must be: name,language,category (e.g. appointment_reminder,en,utility).",
+  whatsapp: "WhatsApp connected.", whatsapp_failed: "WhatsApp test failed: check the Phone number ID and token (and that this number isn't used by another business).",
   imap: "Email connected.", imap_invalid: "Please fill in every email field.", imap_failed: "Could not log in to IMAP/SMTP with those settings.",
 };
 
@@ -58,6 +59,21 @@ export default async function ChannelsPage({ searchParams }: { searchParams: Pro
             <a href="/api/slack/install" className="btn inline-block">Connect Slack</a>
             <a href="/api/google/install" className="btn inline-block">Connect Gmail</a>
           </div>
+          <details className="card">
+            <summary className="cursor-pointer text-sm font-medium">WhatsApp (manual setup)</summary>
+            <ol className="my-2 list-decimal pl-5 text-sm text-slate-600">
+              <li>In Meta&apos;s App Dashboard → WhatsApp → API Setup, copy the <b>Phone number ID</b>.</li>
+              <li>Create a System User in Business Settings and generate a <b>permanent access token</b> with whatsapp_business_messaging.</li>
+              <li>Set the webhook URL to <code>/api/webhooks/whatsapp</code> on this site and subscribe to <code>messages</code>.</li>
+            </ol>
+            <form action={connectWhatsApp} className="grid grid-cols-2 gap-2">
+              <input name="phoneNumberId" required placeholder="Phone number ID" className="input" />
+              <input name="displayPhone" required placeholder="+9198…" className="input" />
+              <input name="wabaId" placeholder="Business Account ID (optional)" className="input" />
+              <input name="accessToken" type="password" required placeholder="Permanent access token" className="input" autoComplete="off" />
+              <button className="btn col-span-2">Test connection and save</button>
+            </form>
+          </details>
           <details className="card">
             <summary className="cursor-pointer text-sm font-medium">Other email (IMAP/SMTP with an app password)</summary>
             <p className="my-2 text-sm text-slate-500">Create an app password in your email provider&apos;s security settings. Never use your main password.</p>

@@ -65,3 +65,9 @@
 - Run: `npm test` (86 passing), `npm run typecheck`, `npm run build`, `npm run eval` (18/20 mock, unchanged). Mock mode now needs `APP_URL=http://localhost:<port>` in `.env.local`.
 - Skipped/unchecked: no linter configured; nothing tested against real Supabase/PostgREST/Realtime, Meta, Slack, Google, Anthropic or Voyage; the rate limiter is per-instance memory; no reconciliation job for `sending` rows.
 - Next: decide the items under "Needs a human decision" in docs/REVIEW_FIX_REPORT.md, merge this branch, then M10.
+
+## M10: platform owner console
+- Done: `/admin` (platform_admin only, 404 otherwise): MRR, active tenants, conversations, AI cost, Meta fees, gross margin, 30-day cost and conversation charts, tenants table with negative-margin and ≥80% flags, top 20 costly conversations, unpriced-usage and unknown-send warnings, reconciliation note; tenant page with cost by channel/event, cost per resolved conversation, cache hit rate, controls (suspend, plan, pilot days, overage, per-tenant alert), admin-assisted WhatsApp/IMAP connect; append-only rate editor; CSV export; spend alert emails (Inngest every 15 min, once per day each). Owners can also connect WhatsApp manually in Settings → Channels. Every admin action is audit-logged.
+- Run: `npm test` (lib/admin.test.ts); app: log in as Platform Admin.
+- Skipped/unchecked: alert email needs `ALERT_SMTP_URL`/`ALERT_FROM` (mock collects them); costs are estimates until reconciled with real bills; no pagination on the tenants table.
+- Next: M11 Razorpay subscriptions, GST invoices, pilot flow, overage.

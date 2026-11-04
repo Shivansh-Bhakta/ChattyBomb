@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 import { asService, asUser } from "./db.ts";
 import { mockAuthAllowed } from "./env.ts";
@@ -37,4 +37,13 @@ export async function requireMember(): Promise<Member & { tenantId: string }> {
   if (!m) redirect("/onboarding");
   if (!m.tenantId) redirect("/admin");
   return m as Member & { tenantId: string };
+}
+
+/** Signed-in platform admin, or 404 (the console's existence is not revealed). */
+export async function requireAdmin(): Promise<Member> {
+  const u = await authUser();
+  if (!u) redirect("/login");
+  const m = await getMember(u.id);
+  if (!m || m.role !== "platform_admin") notFound();
+  return m;
 }
