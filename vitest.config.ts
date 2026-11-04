@@ -13,6 +13,7 @@ export default defineConfig({
       WHATSAPP_APP_SECRET: "test-app-secret",
       WHATSAPP_VERIFY_TOKEN: "test-verify-token",
       SLACK_SIGNING_SECRET: "test-slack-secret",
+      RAZORPAY_WEBHOOK_SECRET: "test-razorpay-secret",
     },
     fileParallelism: false,
   },

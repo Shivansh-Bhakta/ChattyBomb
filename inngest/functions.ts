@@ -2,6 +2,8 @@ import { processInbound } from "@/lib/ai/pipeline";
 import { pollAllEmail } from "@/lib/channels/email-poll";
 import { sendDueReminders } from "@/lib/reminders";
 import { checkSpendAlerts } from "@/lib/alerts";
+import { generateMonthlyInvoices } from "@/lib/billing/invoices";
+import { expirePilots } from "@/lib/billing/lifecycle";
 import { inngest } from "@/lib/queue";
 
 // Thin wrappers; logic lives in lib/ so MOCK_MODE can call it inline. Retries with backoff come from Inngest.
@@ -13,4 +15,6 @@ export const functions = [
   inngest.createFunction({ id: "poll-email", retries: 0, triggers: [{ cron: "*/2 * * * *" }] }, () => pollAllEmail()),
   inngest.createFunction({ id: "send-reminders", retries: 0, triggers: [{ cron: "*/5 * * * *" }] }, () => sendDueReminders()),
   inngest.createFunction({ id: "spend-alerts", retries: 0, triggers: [{ cron: "*/15 * * * *" }] }, () => checkSpendAlerts()),
+  inngest.createFunction({ id: "monthly-invoices", retries: 3, triggers: [{ cron: "TZ=Asia/Kolkata 0 2 1 * *" }] }, () => generateMonthlyInvoices()),
+  inngest.createFunction({ id: "expire-pilots", retries: 3, triggers: [{ cron: "0 * * * *" }] }, () => expirePilots()),
 ];

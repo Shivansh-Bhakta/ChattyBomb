@@ -71,3 +71,9 @@
 - Run: `npm test` (lib/admin.test.ts); app: log in as Platform Admin.
 - Skipped/unchecked: alert email needs `ALERT_SMTP_URL`/`ALERT_FROM` (mock collects them); costs are estimates until reconciled with real bills; no pagination on the tenants table.
 - Next: M11 Razorpay subscriptions, GST invoices, pilot flow, overage.
+
+## M11: Razorpay subscriptions, GST invoices, pilot flow, overage
+- Done: owner subscribes (Starter/Growth from the rates table) → Razorpay hosted checkout (mock page in MOCK_MODE); signed, deduped webhook `/api/webhooks/razorpay` (activated/charged → active, pending → invoice failed, halted → AI paused, cancelled/completed); monthly invoices (Inngest, 1st 02:00 IST) with plan + overage (only for `bill_overage`) + Meta fees at cost + 18% GST, idempotent per tenant/month, overage+Meta charged as a Razorpay add-on on the next renewal; printable `/invoices/[id]`; billing details (GSTIN validated); pilots expire hourly → suspended; "limit reached" email once a month for `pause_ai`.
+- Run: `npm test` (lib/billing/billing.test.ts); app: log in as Anjali → Settings → Growth.
+- Skipped/unchecked: Razorpay payload/endpoint shapes not verified against live docs; FOR THE ACCOUNTANT: GST on pass-through Meta fees, IGST vs CGST+SGST, SAC code, FY numbering; Razorpay plans must be created GST-inclusive; overage price is a placeholder (₹2/conversation); no proration on plan changes.
+- Next: M12 missed-leads pilot report + landing page signup.

@@ -57,3 +57,9 @@ insert into rates (key, value, currency, unit, effective_from, note) values
   ('meta:marketing:IN', 0.80, 'INR', 'per_message', '2026-01-01', 'PLACEHOLDER'),
   ('meta:utility:IN', 0.12, 'INR', 'per_message', '2026-01-01', 'PLACEHOLDER'),
   ('meta:service:IN', 0, 'INR', 'per_message', '2026-01-01', 'PLACEHOLDER: replies in the 24h window are free');
+
+-- Plan prices (INR, exclusive of GST) and overage. Billing reads these; never hardcoded.
+insert into rates (key, value, currency, unit, effective_from, note) values
+  ('plan:starter:monthly', 999, 'INR', 'per_month', '2026-01-01', 'spec price'),
+  ('plan:growth:monthly', 2999, 'INR', 'per_month', '2026-01-01', 'spec price'),
+  ('plan:overage:per_conversation', 2, 'INR', 'per_conversation', '2026-01-01', 'PLACEHOLDER: overage price not in spec');
