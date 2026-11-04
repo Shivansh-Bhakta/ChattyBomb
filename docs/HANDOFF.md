@@ -59,3 +59,9 @@
 ## After M9
 - Security fix: `supabase/migrations/0004_users_no_owner_insert.sql` (owners could attach any login to their tenant); test added.
 - Read `docs/REVIEW_FIRST.md` before M10.
+
+## Review-and-fix session (M1–M9; see docs/REVIEW_FIX_REPORT.md)
+- Done: A (asService scoped + guard test), B (`0005` least-privilege grants + cross-tenant trigger, `0007` admin audit + hidden channel credentials), C + fix 6 (startup refuses mock mode in production or off localhost, and missing/malformed production config), fix 1 (unpriced usage flagged + /admin counter), fix 2 + 7 (exactly-once sends: `0006` send state + idempotency keys, only definite rejections retried, unknown outcomes handed to a human), fix 3 (email loop guard), fix 4 (rate limits), fix 5 (answers default to claude-sonnet-5-5).
+- Run: `npm test` (86 passing), `npm run typecheck`, `npm run build`, `npm run eval` (18/20 mock, unchanged). Mock mode now needs `APP_URL=http://localhost:<port>` in `.env.local`.
+- Skipped/unchecked: no linter configured; nothing tested against real Supabase/PostgREST/Realtime, Meta, Slack, Google, Anthropic or Voyage; the rate limiter is per-instance memory; no reconciliation job for `sending` rows.
+- Next: decide the items under "Needs a human decision" in docs/REVIEW_FIX_REPORT.md, merge this branch, then M10.
