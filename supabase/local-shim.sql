@@ -15,3 +15,4 @@ grant usage on schema auth to authenticated, anon;
 grant execute on function auth.uid() to authenticated, anon;
 drop publication if exists supabase_realtime;
 create publication supabase_realtime;
+grant usage on schema public to anon, authenticated; -- as on Supabase
