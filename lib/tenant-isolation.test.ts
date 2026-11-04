@@ -42,6 +42,13 @@ describe("tenant isolation (RLS)", () => {
     ).rejects.toThrow(/only platform admins/);
   });
 
+  it("owners cannot attach another login to their tenant", async () => {
+    const outsider = (await asService((db) => db.query("insert into auth.users (email) values ('outsider@x.test') returning id"))).rows[0].id;
+    await expect(
+      asUser(A_OWNER, (db) => db.query("insert into users (id, tenant_id, role, email) values ($1, $2, 'agent', 'outsider@x.test')", [outsider, TENANT_A])),
+    ).rejects.toThrow(/row-level security/);
+  });
+
   it("no session sees nothing; webhook_events is service-only; admin sees all", async () => {
     await asUser("00000000-0000-0000-0000-00000000dead", async (db) => {
       expect((await db.query("select 1 from conversations")).rowCount).toBe(0);

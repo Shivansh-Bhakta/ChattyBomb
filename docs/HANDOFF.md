@@ -55,3 +55,7 @@
 - Run: `npm test` (lib/tenant-lifecycle.test.ts); app: log in as Anjali (Glow Salon) → Settings.
 - Skipped/unchecked: no email notification at 80%/100% (M10/M11 alerts), usage history for deleted tenants is gone (platform revenue reports lose it), Supabase Storage listing handles ≤1000 files per tenant, real Supabase Auth user deletion never exercised.
 - Next: M10 platform owner console and alerts. Review docs/REVIEW_FIRST.md first.
+
+## After M9
+- Security fix: `supabase/migrations/0004_users_no_owner_insert.sql` (owners could attach any login to their tenant); test added.
+- Read `docs/REVIEW_FIRST.md` before M10.
