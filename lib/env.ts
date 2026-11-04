@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isLocalDeployment } from "./startup.ts";
 
 const schema = z
   .object({
@@ -47,7 +48,8 @@ export function env(): Env {
 }
 
 /** Mock login is allowed only in mock mode and never in a production build. */
-export const mockAuthAllowed = () => env().MOCK_MODE && env().NODE_ENV !== "production";
+/** Mock login is allowed only in mock mode, never in a production build, and only on localhost. */
+export const mockAuthAllowed = () => env().MOCK_MODE && env().NODE_ENV !== "production" && isLocalDeployment(process.env);
 
 /** Fetches a secret by name only when a real call needs it. */
 export function secret(name: "ANTHROPIC_API_KEY" | "VOYAGE_API_KEY" | "SUPABASE_SERVICE_ROLE_KEY" | "SLACK_SIGNING_SECRET" | "SLACK_CLIENT_ID" | "SLACK_CLIENT_SECRET" | "GOOGLE_CLIENT_ID" | "GOOGLE_CLIENT_SECRET" | "WHATSAPP_APP_SECRET" | "WHATSAPP_VERIFY_TOKEN"): string {
