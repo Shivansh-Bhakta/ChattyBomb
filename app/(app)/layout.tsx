@@ -9,6 +9,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <header className="flex items-center gap-6 border-b border-slate-200 bg-white px-4 py-2 text-sm">
         <span className="font-semibold text-emerald-700">ChattyBomb</span>
         <Link href="/inbox">Inbox</Link>
+        <Link href="/leads">Leads</Link>
+        <Link href="/reminders">Reminders</Link>
         <Link href="/documents">Documents</Link>
         <Link href="/settings/channels">Channels</Link>
         <span className="ml-auto text-slate-500">{me.name} · {me.role}</span>

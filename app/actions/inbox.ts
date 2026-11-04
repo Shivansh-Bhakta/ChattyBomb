@@ -82,3 +82,27 @@ export async function sendReply(form: FormData) {
   revalidatePath("/inbox");
   if (error) redirect(`/inbox?c=${conversationId}&error=${error}`);
 }
+
+/** Approved WhatsApp template (the only option outside the 24h window). Must be in the channel's template list. */
+export async function sendTemplate(form: FormData) {
+  const me = await requireMember();
+  const conversationId = id.parse(form.get("conversationId"));
+  const name = z.string().trim().min(1).max(512).parse(form.get("template"));
+  const params = z.string().max(1000).parse(form.get("params") ?? "").split("|").map((p) => p.trim()).filter(Boolean).slice(0, 10);
+  const { templatesOf } = await import("@/lib/channels/templates");
+  const { sendMessage } = await import("@/lib/channels/outbound");
+  const config = await asUser(me.id, async (db) => (await db.query(
+    `select ch.config from conversations c join channels ch on ch.id = c.channel_id where c.id = $1`, [conversationId])).rows[0]?.config);
+  const t = templatesOf(config).find((x) => x.name === name);
+  let error = "";
+  try {
+    if (!t) throw new Error("template not approved for this channel");
+    const { messageId } = await sendMessage(me.tenantId, conversationId, { kind: "template", ...t, params }, { type: "agent", userId: me.id });
+    await asUser(me.id, (db) => audit(db, me.tenantId, me.id, "human.template", conversationId, { message_id: messageId, template: name }));
+  } catch (e) {
+    console.error("[sendTemplate]", (e as Error).message);
+    error = "send";
+  }
+  revalidatePath("/inbox");
+  if (error) redirect(`/inbox?c=${conversationId}&error=${error}`);
+}

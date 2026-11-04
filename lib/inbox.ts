@@ -36,7 +36,7 @@ export async function listConversations(db: Db, f: Filters) {
 
 export async function getThread(db: Db, conversationId: string) {
   const { rows: [conv] } = await db.query(
-    `select c.*, ch.type as channel, ct.name as contact_name, ct.phone, ct.email
+    `select c.*, ch.type as channel, ch.config as channel_config, ct.name as contact_name, ct.phone, ct.email
        from conversations c join channels ch on ch.id = c.channel_id join contacts ct on ct.id = c.contact_id
       where c.id = $1`,
     [conversationId],
