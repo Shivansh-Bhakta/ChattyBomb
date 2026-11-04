@@ -1,0 +1,5 @@
+- Changed: M0 docs only: CLAUDE.md, docs/DATA_MODEL.md, docs/ARCHITECTURE.md. No code.
+- Run: nothing to run yet.
+- Next: M1: scaffold Next.js, Supabase auth, tenant onboarding, migrations with RLS, seed data.
+- Manual: approve M0; confirm Voyage for embeddings and Inngest for jobs; create Supabase + Vercel projects before M1 previews.
+- Open: email alert provider (Resend vs SMTP) decided in M10.
