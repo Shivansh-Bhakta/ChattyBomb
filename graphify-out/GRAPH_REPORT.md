@@ -1,17 +1,17 @@
 # Graph Report - ChattyBomb  (2026-11-04)
 
 ## Corpus Check
-- 145 files · ~54,892 words
+- 145 files · ~55,053 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 3 file(s) not represented in the graph (top: .example 1, (none) 1, .css 1)
 
 ## Summary
-- 724 nodes · 2180 edges · 28 communities (19 shown, 9 thin omitted)
+- 724 nodes · 2182 edges · 28 communities (19 shown, 9 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 47 edges (avg confidence: 0.89)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `bd81894f`
+- Built from commit: `284f9c97`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -59,10 +59,10 @@
   docs/REVIEW_FIX_REPORT.md → lib/db.ts
 - `Phase 1 review (summary)` --references--> `asService()`  [INFERRED]
   docs/REVIEW_FIX_REPORT.md → lib/db.ts
-- `Status table` --references--> `startupProblems()`  [INFERRED]
-  docs/REVIEW_FIX_REPORT.md → lib/startup.ts
-- `Skipped or could not check` --references--> `embed()`  [INFERRED]
-  docs/REVIEW_FIRST.md → lib/ai/embed.ts
+- `Status table` --references--> `sendMessage()`  [INFERRED]
+  docs/REVIEW_FIX_REPORT.md → lib/channels/outbound.ts
+- `Status table` --references--> `unpricedSummary()`  [INFERRED]
+  docs/REVIEW_FIX_REPORT.md → lib/metering.ts
 
 ## Import Cycles
 - None detected.
@@ -115,8 +115,8 @@ Cohesion: 0.14
 Nodes (33): GET(), GET(), GET(), GET(), startSubscription(), exchangeGoogleCode(), GMAIL_SCOPES, GOOGLE_STATE_COOKIE (+25 more)
 
 ### Community 11 - "rate-limit.test.ts"
-Cohesion: 0.15
-Nodes (21): POST(), POST(), applyRazorpayEvent(), eventIdOf(), verifyRazorpaySignature(), ingestMessages(), upsertContact(), slack (+13 more)
+Cohesion: 0.12
+Nodes (26): POST(), POST(), api(), applyRazorpayEvent(), createAddon(), eventIdOf(), mockRazorpay, ts (+18 more)
 
 ### Community 14 - "whatsapp.test.ts"
 Cohesion: 0.06
@@ -127,8 +127,8 @@ Cohesion: 0.13
 Nodes (14): Before real customers, ChattyBomb Omni, Deployment checklist, Environment variables, Google Cloud (Gmail), Inngest (jobs: AI replies, email polling, reminders, alerts, invoices, pilot expiry), Landing page, Monitoring (+6 more)
 
 ### Community 16 - "billing.test.ts"
-Cohesion: 0.06
-Nodes (48): GET, POST, PUT, PilotReportPage(), functions, q(), AlertSettings, alertSettingsSchema (+40 more)
+Cohesion: 0.07
+Nodes (43): GET, POST, PUT, PilotReportPage(), functions, q(), AlertSettings, alertSettingsSchema (+35 more)
 
 ### Community 17 - "dependencies"
 Cohesion: 0.11
@@ -170,5 +170,5 @@ _Questions this graph is uniquely positioned to answer:_
   _High betweenness centrality (0.052) - this node is a cross-community bridge._
 - **Should `Package Dependencies` be split into smaller, more focused modules?**
   _Cohesion score 0.11594202898550725 - nodes in this community are weakly interconnected._
-- **Why does `zod` connect `env.ts` to `Package Dependencies`, `slack.test.ts`, `pipeline.ts`, `env`, `whatsapp.test.ts`, `billing.test.ts`, `dependencies`, `asService`, `db.ts`?**
+- **Why does `zod` connect `env.ts` to `Package Dependencies`, `slack.test.ts`, `pipeline.ts`, `env`, `rate-limit.test.ts`, `whatsapp.test.ts`, `billing.test.ts`, `dependencies`, `asService`, `db.ts`?**
   _High betweenness centrality (0.046) - this node is a cross-community bridge._
