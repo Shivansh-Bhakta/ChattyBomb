@@ -41,7 +41,7 @@ export async function testImap(c: z.infer<typeof imapCreds>) {
 }
 
 /** Stores an email channel with encrypted credentials. An address connected to another tenant is refused. */
-export async function saveEmailChannel(tenantId: string, userId: string, provider: "gmail" | "imap", address: string, creds: object) {
+export async function saveEmailChannel(tenantId: string, userId: string, provider: "gmail" | "imap", address: string, creds: object, actorType: "user" | "platform_admin" = "user") {
   return asService(async (db) => { // scope: tenant (on-conflict update guarded by tenant_id)
     const { rows: [ch] } = await db.query(
       `insert into channels (tenant_id, type, provider, status, external_id, config, credentials_encrypted, connected_by, connected_at)
@@ -54,8 +54,8 @@ export async function saveEmailChannel(tenantId: string, userId: string, provide
     );
     if (!ch) throw new Error("this email address is connected to another business");
     await db.query(
-      `insert into audit_log (tenant_id, actor_type, actor_user_id, action, target_type, target_id, metadata) values ($1, 'user', $2, 'channel.connect', 'channel', $3, $4)`,
-      [tenantId, userId, ch.id, { type: "email", provider, address }],
+      `insert into audit_log (tenant_id, actor_type, actor_user_id, action, target_type, target_id, metadata) values ($1, $5, $2, 'channel.connect', 'channel', $3, $4)`,
+      [tenantId, userId, ch.id, { type: "email", provider, address, assisted: actorType === "platform_admin" }, actorType],
     );
     return ch.id as string;
   });

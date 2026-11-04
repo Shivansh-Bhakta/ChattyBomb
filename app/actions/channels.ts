@@ -86,3 +86,19 @@ export async function setTemplates(form: FormData) {
   });
   revalidatePath("/settings/channels");
 }
+
+/** Owner connects WhatsApp manually (first pilots): Phone number ID + permanent token from Meta. Tested before saving. */
+export async function connectWhatsApp(form: FormData) {
+  const me = await requireMember();
+  if (me.role !== "owner") throw new Error("only owners can connect channels");
+  const { saveWhatsAppChannel } = await import("@/lib/channels/whatsapp-connect");
+  let ok = true;
+  try {
+    await saveWhatsAppChannel(me.tenantId, { id: me.id, type: "user" }, Object.fromEntries(form) as never);
+  } catch (e) {
+    console.error("[connectWhatsApp]", (e as Error).message);
+    ok = false;
+  }
+  revalidatePath("/settings/channels");
+  redirect(ok ? "/settings/channels?connected=whatsapp" : "/settings/channels?error=whatsapp_failed");
+}

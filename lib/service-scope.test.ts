@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 // Every asService() call bypasses RLS, so each must declare why it is safe.
-const SCOPES = ["tenant", "webhook-lookup", "platform-job", "mock-auth", "onboarding"];
+const SCOPES = ["tenant", "webhook-lookup", "platform-job", "mock-auth", "onboarding", "platform-admin"];
 const files = (dir: string): string[] =>
   readdirSync(dir).flatMap((f) => {
     const p = join(dir, f);
