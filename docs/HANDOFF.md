@@ -77,3 +77,9 @@
 - Run: `npm test` (lib/billing/billing.test.ts); app: log in as Anjali → Settings → Growth.
 - Skipped/unchecked: Razorpay payload/endpoint shapes not verified against live docs; FOR THE ACCOUNTANT: GST on pass-through Meta fees, IGST vs CGST+SGST, SAC code, FY numbering; Razorpay plans must be created GST-inclusive; overage price is a placeholder (₹2/conversation); no proration on plan changes.
 - Next: M12 missed-leads pilot report + landing page signup.
+
+## M12: missed-leads pilot report + landing page signup
+- Done: `pilot_reports` (one per tenant, RLS); when a pilot expires (hourly job) the report is generated once and emailed to owners: leads captured, bookings handled, after-hours messages answered (before 9am, from 8pm, or Sunday IST), plus conversations/AI replies/handoffs; `/settings/pilot-report` shows a live preview during the pilot; `/signup?ref=landing` (or `utm_source`) carries through onboarding into `tenants.signup_source`.
+- Run: `npm test` (lib/pilot-report.test.ts); app: open `/signup?ref=landing`.
+- Manual: point the landing page's "Start free pilot" button (chattybong.vercel.app, separate site) at `{APP_URL}/signup?ref=landing`.
+- Skipped/unchecked: one business-hours window for all tenants; the landing page itself was not edited (not in this repo).

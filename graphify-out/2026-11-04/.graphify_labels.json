@@ -3,7 +3,6 @@
   "1": "Package Dependencies",
   "3": "Database Schema",
   "5": "TypeScript Config",
-  "7": "Local DB Reset",
   "8": "NPM Scripts",
   "10": "Supabase Auth Shim",
   "12": "PostCSS Config",

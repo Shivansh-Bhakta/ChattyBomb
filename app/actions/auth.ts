@@ -9,6 +9,10 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { createTenant, onboardingSchema } from "@/lib/tenants";
 
 const creds = z.object({ email: z.string().trim().toLowerCase().email(), password: z.string().min(8).max(200) });
+const refQuery = (form: FormData) => {
+  const r = z.string().trim().toLowerCase().regex(/^[a-z0-9_-]{1,40}$/).safeParse(form.get("ref"));
+  return r.success ? `?ref=${r.data}` : "";
+};
 const cookieOpts = { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/" } as const;
 
 export async function mockLogin(form: FormData) {
@@ -33,11 +37,11 @@ export async function signup(form: FormData) {
     );
     if (!rows[0]) redirect("/signup?error=exists");
     (await cookies()).set(MOCK_COOKIE, rows[0].id, cookieOpts);
-    redirect("/onboarding");
+    redirect(`/onboarding${refQuery(form)}`);
   }
   const { data, error } = await (await supabaseServer()).auth.signUp({ email, password });
   if (error) redirect("/signup?error=1");
-  redirect(data.session ? "/onboarding" : "/login?check_email=1");
+  redirect(data.session ? `/onboarding${refQuery(form)}` : "/login?check_email=1");
 }
 
 export async function onboard(form: FormData) {

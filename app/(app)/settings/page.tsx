@@ -20,7 +20,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   return (
     <main className="mx-auto max-w-3xl space-y-4 p-6">
       <h1 className="text-xl font-semibold">Settings · {u.name}</h1>
-      <nav className="flex gap-4 text-sm underline"><Link href="/settings/channels">Channels</Link>{owner && <Link href="/settings/audit">Audit log</Link>}</nav>
+      <nav className="flex gap-4 text-sm underline"><Link href="/settings/channels">Channels</Link><Link href="/settings/pilot-report">Pilot report</Link>{owner && <Link href="/settings/audit">Audit log</Link>}</nav>
 
       <section className="card space-y-3">
         <h2 className="font-medium">Plan and usage</h2>
