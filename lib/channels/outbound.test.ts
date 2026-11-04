@@ -2,6 +2,7 @@ import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vites
 import { asService, closePool } from "../db.ts";
 import { mockOutbox } from "./mock.ts";
 import { sendMessage } from "./outbound.ts";
+import { ProviderRejectedError } from "./types.ts";
 import { whatsapp } from "./whatsapp.ts";
 import { CONV_A1, TENANT_A } from "../../test/ids.ts";
 
@@ -32,18 +33,27 @@ describe("outbound exactly-once", () => {
     }
   });
 
-  it("re-sends once after a definite provider failure, and never after success", async () => {
-    vi.spyOn(whatsapp, "send").mockRejectedValueOnce(new Error("WhatsApp send failed (500)"));
-    await expect(sendMessage(TENANT_A, CONV_A1, text("retry me"), { type: "ai" }, { idempotencyKey: "k-fail" })).rejects.toThrow(/500/);
+  it("re-sends once after a definite provider rejection, records the new text, and never re-sends after success", async () => {
+    vi.spyOn(whatsapp, "send").mockRejectedValueOnce(new ProviderRejectedError("WhatsApp send failed (400): invalid parameter"));
+    await expect(sendMessage(TENANT_A, CONV_A1, text("first draft"), { type: "ai" }, { idempotencyKey: "k-fail" })).rejects.toThrow(/400/);
     expect((await q(`select status from messages where idempotency_key = 'k-fail'`))[0].status).toBe("failed");
 
-    const ok = await sendMessage(TENANT_A, CONV_A1, text("retry me"), { type: "ai" }, { idempotencyKey: "k-fail" });
+    const ok = await sendMessage(TENANT_A, CONV_A1, text("second draft"), { type: "ai" }, { idempotencyKey: "k-fail" });
     expect(ok.duplicate).toBeUndefined();
-    const again = await sendMessage(TENANT_A, CONV_A1, text("retry me"), { type: "ai" }, { idempotencyKey: "k-fail" });
+    const again = await sendMessage(TENANT_A, CONV_A1, text("third draft"), { type: "ai" }, { idempotencyKey: "k-fail" });
     expect(again).toMatchObject({ messageId: ok.messageId, providerMessageId: ok.providerMessageId, duplicate: true });
     expect(mockOutbox).toHaveLength(1);
-    expect(await q(`select status from messages where idempotency_key = 'k-fail'`)).toEqual([{ status: "sent" }]);
+    expect((mockOutbox[0].msg as { text: string }).text).toBe("second draft");
+    expect(await q(`select status, body from messages where idempotency_key = 'k-fail'`)).toEqual([{ status: "sent", body: "second draft" }]);
     expect(await q(`select 1 from usage_events where meta->>'message_id' = $1`, [ok.messageId])).toHaveLength(1);
+  });
+
+  it("treats a provider 5xx or socket error as unknown and does not re-send", async () => {
+    vi.spyOn(whatsapp, "send").mockRejectedValueOnce(new Error("WhatsApp send failed (503): service unavailable"));
+    await expect(sendMessage(TENANT_A, CONV_A1, text("maybe"), { type: "ai" }, { idempotencyKey: "k-5xx" })).rejects.toThrow(/503/);
+    expect((await q(`select status from messages where idempotency_key = 'k-5xx'`))[0].status).toBe("sending");
+    expect((await sendMessage(TENANT_A, CONV_A1, text("maybe"), { type: "ai" }, { idempotencyKey: "k-5xx" })).duplicate).toBe(true);
+    expect(mockOutbox).toHaveLength(0);
   });
 
   it("treats a provider timeout as unknown and does not re-send", async () => {

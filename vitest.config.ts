@@ -7,6 +7,7 @@ export default defineConfig({
     setupFiles: ["./test/setup.ts"],
     env: {
       MOCK_MODE: "true",
+      APP_URL: "http://localhost:3000",
       DATABASE_URL: process.env.TEST_DATABASE_URL ?? "postgres://postgres:postgres@localhost:5432/chattybomb_test",
       ENCRYPTION_KEY: "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
       WHATSAPP_APP_SECRET: "test-app-secret",

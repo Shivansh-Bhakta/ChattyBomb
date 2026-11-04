@@ -43,3 +43,12 @@ export interface ChannelAdapter {
   /** Whether a free-form (non-template) reply is allowed right now. */
   canSendFreeform(conv: { last_inbound_at: Date | string | null }, now?: Date): boolean;
 }
+
+/**
+ * Thrown by adapters only when the provider definitely did NOT accept the message (rejected before
+ * or by the provider, e.g. 4xx, Slack ok:false, missing credentials). Any other error is treated
+ * as "may have been delivered" and is never re-sent automatically.
+ */
+export class ProviderRejectedError extends Error {
+  override name = "ProviderRejectedError";
+}

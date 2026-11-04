@@ -20,6 +20,7 @@ export async function processInbound({ tenantId, messageId }: { tenantId: string
     const { rows: [m] } = await db.query(
       `select m.id, m.body, m.created_at, m.conversation_id, c.status, c.ai_paused, ch.type as channel,
               t.status as tenant_status, t.conversation_limit, t.overage_policy,
+              (select o.status from messages o where o.tenant_id = m.tenant_id and o.idempotency_key = 'ai-reply:' || m.id::text) as ai_reply_status,
               (select count(*)::int from messages o join conversations oc on oc.id = o.conversation_id
                 where oc.tenant_id = m.tenant_id and oc.contact_id = c.contact_id and oc.channel_id = c.channel_id
                   and o.direction = 'outbound' and o.sender_type = 'ai' and o.status <> 'failed'
@@ -44,6 +45,9 @@ export async function processInbound({ tenantId, messageId }: { tenantId: string
   if (ctx.skip) return { outcome: "skipped", reason: ctx.skip };
   const { m, transcript } = ctx;
   const base = { tenantId, conversationId: m.conversation_id as string, channel: m.channel as Channel };
+  // Retry after our own reply attempt: never re-run (and re-bill) the AI. Only a definitely failed send is retried.
+  if (m.ai_reply_status === "sending") return handoff(base, m.id, "send_outcome_unknown", "An AI reply may or may not have reached the customer (send outcome unknown). Please check and follow up.");
+  if (m.ai_reply_status && m.ai_reply_status !== "failed") return { outcome: "skipped", reason: "already_sent" };
   // Email loop guard: a sender (e.g. an auto-responder we couldn't detect) gets at most N AI replies a day.
   if (m.channel === "email" && m.ai_replies_24h >= env().AI_EMAIL_DAILY_REPLY_CAP) {
     return handoff(base, m.id, "email_daily_cap", `AI reply limit (${env().AI_EMAIL_DAILY_REPLY_CAP}/day) reached for this sender; possible auto-reply loop. Last message: "${String(m.body).slice(0, 200)}"`);
@@ -78,8 +82,18 @@ export async function processInbound({ tenantId, messageId }: { tenantId: string
   const post = afterAnswer(a.result, env().AI_MIN_CONFIDENCE);
   if (post.handoff) return handoff(base, m.id, post.reason, c.result.summary);
 
-  const sent = await sendMessage(tenantId, base.conversationId, { kind: "text", text: a.result.answer }, { type: "ai" }, { idempotencyKey: `ai-reply:${m.id}` });
-  if (sent.duplicate) return { outcome: "skipped", reason: "already_sent" };
+  let sent;
+  try {
+    sent = await sendMessage(tenantId, base.conversationId, { kind: "text", text: a.result.answer }, { type: "ai" }, { idempotencyKey: `ai-reply:${m.id}` });
+  } catch (e) {
+    // Never retried automatically (a retry could double-send); a human takes it from here.
+    console.error(`[pipeline] AI reply for message ${m.id} failed: ${(e as Error).message}`);
+    return handoff(base, m.id, "send_failed", `The AI reply could not be confirmed as sent (${(e as Error).message.slice(0, 120)}). Please reply manually.`);
+  }
+  if (sent.duplicate) {
+    if (!sent.providerMessageId) return handoff(base, m.id, "send_outcome_unknown", "An AI reply may or may not have reached the customer (send outcome unknown). Please check and follow up.");
+    return { outcome: "skipped", reason: "already_sent" };
+  }
   await asService((db) => db.query( // scope: tenant
     `insert into audit_log (tenant_id, actor_type, action, target_type, target_id, metadata) values ($1, 'ai', 'ai.reply', 'message', $2, $3)`,
     [tenantId, sent.messageId, { inbound_message_id: m.id, intent: c.result.intent, confidence: a.result.confidence, top_score: chunks[0]?.score }],

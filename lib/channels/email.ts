@@ -5,7 +5,7 @@ import { z } from "zod";
 import { asService } from "../db.ts";
 import { env, secret } from "../env.ts";
 import { mockSend } from "./mock.ts";
-import type { ChannelAdapter, InboundMessage } from "./types.ts";
+import { ProviderRejectedError, type ChannelAdapter, type InboundMessage } from "./types.ts";
 
 /** Encrypted credential payloads. Never passwords of the business's main account: Gmail OAuth or an IMAP app password. */
 export const gmailCreds = z.object({ refresh_token: z.string().min(1) });
@@ -62,7 +62,7 @@ async function googleAccessToken(refreshToken: string) {
     signal: AbortSignal.timeout(15_000),
   });
   const j = (await res.json().catch(() => ({}))) as { access_token?: string; error?: string };
-  if (!j.access_token) throw new Error(`Google token refresh failed: ${j.error ?? res.status}`);
+  if (!j.access_token) throw new ProviderRejectedError(`Google token refresh failed: ${j.error ?? res.status}`);
   return j.access_token;
 }
 
@@ -72,7 +72,9 @@ export async function gmailFetch(refreshToken: string, path: string, init: Reque
     headers: { authorization: `Bearer ${await googleAccessToken(refreshToken)}`, "content-type": "application/json", ...init.headers },
     signal: AbortSignal.timeout(20_000),
   });
-  if (!res.ok) throw new Error(`Gmail API ${path.split("?")[0]} failed (${res.status})`);
+  const detail = `Gmail API ${path.split("?")[0]} failed (${res.status})`;
+  if (res.status >= 400 && res.status < 500) throw new ProviderRejectedError(detail);
+  if (!res.ok) throw new Error(detail);
   return res.json();
 }
 
@@ -83,9 +85,9 @@ export const email: ChannelAdapter = {
   parse: () => { throw new Error("email is polled, not pushed: use parseEmail()"); },
 
   async send(target, msg) {
-    if (msg.kind !== "text") throw new Error("email has no message templates");
+    if (msg.kind !== "text") throw new ProviderRejectedError("email has no message templates");
     if (env().MOCK_MODE) return mockSend("email", target, msg);
-    if (!target.credentials) throw new Error("email channel has no credentials");
+    if (!target.credentials) throw new ProviderRejectedError("email channel has no credentials");
     const address = target.channelExternalId;
     // Reply headers come from the latest customer email in this thread.
     const { rows: [last] } = await asService((db) => db.query( // scope: webhook-lookup (channel external_id is unique, so this is one tenant's thread)
@@ -107,7 +109,14 @@ export const email: ChannelAdapter = {
       await gmailFetch(refresh_token, "messages/send", { method: "POST", body: JSON.stringify({ raw }) });
     } else {
       const c = imapCreds.parse(creds);
-      await nodemailer.createTransport({ host: c.smtp.host, port: c.smtp.port, secure: c.smtp.secure, auth: { user: c.user, pass: c.pass } }).sendMail(mail);
+      try {
+        await nodemailer.createTransport({ host: c.smtp.host, port: c.smtp.port, secure: c.smtp.secure, auth: { user: c.user, pass: c.pass } }).sendMail(mail);
+      } catch (e) {
+        // SMTP 5xx (or auth failure) is a permanent rejection; socket errors after DATA are unclear.
+        const code = (e as { responseCode?: number; code?: string }).responseCode;
+        if ((code && code >= 500) || (e as { code?: string }).code === "EAUTH") throw new ProviderRejectedError(`SMTP rejected: ${(e as Error).message}`);
+        throw e;
+      }
     }
     return { providerMessageId: messageId };
   },

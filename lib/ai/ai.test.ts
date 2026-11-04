@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "@/app/api/webhooks/whatsapp/route";
 import { mockOutbox } from "../channels/mock.ts";
+import { whatsapp as whatsappAdapter } from "../channels/whatsapp.ts";
 import { asService, closePool } from "../db.ts";
 import { chunkText } from "./chunk.ts";
 import { ingestDocument } from "./documents.ts";
@@ -109,5 +110,37 @@ describe("service-role queries stay inside the tenant", () => {
     const { processInbound } = await import("./pipeline.ts");
     const [m] = await q(`select id from messages where tenant_id = $1 and direction = 'inbound' limit 1`, [TENANT_A]);
     expect(await processInbound({ tenantId: "10000000-0000-0000-0000-00000000000b", messageId: m.id })).toEqual({ outcome: "skipped", reason: "not_found" });
+  });
+});
+
+describe("AI pipeline retries (reviewer findings 1 and 4)", () => {
+  const send = async (id: string, from: string, text: string) => {
+    expect((await POST(waRequest(waMessage(id, from, text)))).status).toBe(200);
+    const [m] = await q("select conversation_id from messages where provider_message_id = $1", [id]);
+    const [c] = await q("select status from conversations where id = $1", [m.conversation_id]);
+    return { ...m, ...c };
+  };
+  it("a retry after the reply was sent neither re-runs the AI nor re-sends", async () => {
+    const { processInbound } = await import("./pipeline.ts");
+    const r = await send("wamid.retry1", "919100000011", "What is the price of a CBC test?");
+    const [m] = await q(`select id from messages where provider_message_id = 'wamid.retry1'`);
+    expect(mockOutbox).toHaveLength(1);
+    const usageBefore = (await q(`select count(*)::int as n from usage_events where conversation_id = $1`, [r.conversation_id]))[0].n;
+    expect(await processInbound({ tenantId: TENANT_A, messageId: m.id })).toEqual({ outcome: "skipped", reason: "already_sent" });
+    expect(mockOutbox).toHaveLength(1);
+    expect((await q(`select count(*)::int as n from usage_events where conversation_id = $1`, [r.conversation_id]))[0].n).toBe(usageBefore);
+  });
+
+  it("an AI reply with an unknown outcome is handed to a human, not dropped or re-sent", async () => {
+    const spy = vi.spyOn(whatsappAdapter, "send").mockRejectedValueOnce(new Error("socket hang up"));
+    const r = await send("wamid.retry2", "919100000012", "What is the price of a CBC test?");
+    spy.mockRestore();
+    expect(r.status).toBe("needs_human");
+    expect(await q(`select metadata->>'reason' as reason from audit_log where action = 'ai.handoff' and target_id = $1`, [r.conversation_id])).toEqual([{ reason: "send_failed" }]);
+    const { processInbound } = await import("./pipeline.ts");
+    const [m] = await q(`select id from messages where provider_message_id = 'wamid.retry2'`);
+    await q(`update conversations set status = 'open' where id = $1`, [r.conversation_id]); // a retry later
+    expect(await processInbound({ tenantId: TENANT_A, messageId: m.id })).toEqual({ outcome: "handoff", reason: "send_outcome_unknown" });
+    expect(mockOutbox).toHaveLength(0);
   });
 });

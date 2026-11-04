@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import { env, secret } from "../env.ts";
 import { mockSend } from "./mock.ts";
-import type { ChannelAdapter, Parsed } from "./types.ts";
+import { ProviderRejectedError, type ChannelAdapter, type Parsed } from "./types.ts";
 
 export const WINDOW_MS = 24 * 60 * 60 * 1000;
 
@@ -65,7 +65,7 @@ export const whatsapp: ChannelAdapter = {
 
   async send(target, msg) {
     if (env().MOCK_MODE) return mockSend("whatsapp", target, msg);
-    if (!target.credentials) throw new Error("WhatsApp channel has no access token");
+    if (!target.credentials) throw new ProviderRejectedError("WhatsApp channel has no access token");
     const body = msg.kind === "text"
       ? { messaging_product: "whatsapp", to: target.to.replace(/^\+/, ""), type: "text", text: { body: msg.text } }
       : { messaging_product: "whatsapp", to: target.to.replace(/^\+/, ""), type: "template",
@@ -78,7 +78,9 @@ export const whatsapp: ChannelAdapter = {
       signal: AbortSignal.timeout(15_000),
     });
     const json = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(`WhatsApp send failed (${res.status}): ${json?.error?.message ?? "unknown error"}`);
+    const detail = `WhatsApp send failed (${res.status}): ${json?.error?.message ?? "unknown error"}`;
+    if (res.status >= 400 && res.status < 500) throw new ProviderRejectedError(detail);
+    if (!res.ok) throw new Error(detail); // 5xx: Meta may still deliver
     const id = json?.messages?.[0]?.id;
     if (typeof id !== "string") throw new Error("WhatsApp send returned no message id");
     return { providerMessageId: id };

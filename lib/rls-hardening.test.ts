@@ -64,3 +64,16 @@ describe("RLS hardening (0005)", () => {
     expect(TENANT_B).toBeTruthy();
   });
 });
+
+describe("reviewer findings on 0005 (0007)", () => {
+  it("platform admins can write audit entries as platform_admin, tenants still cannot spoof it", async () => {
+    await asUser(ADMIN, (db) => db.query(`insert into audit_log (tenant_id, actor_type, actor_user_id, action) values ($1, 'platform_admin', $2, 'admin.test')`, [TENANT_A, ADMIN]));
+    await expect(asUser(A_OWNER, (db) => db.query(`insert into audit_log (tenant_id, actor_type, actor_user_id, action) values ($1, 'platform_admin', $2, 'x')`, [TENANT_A, A_OWNER]))).rejects.toThrow(/row-level security/);
+  });
+
+  it("members cannot read stored channel credentials", async () => {
+    await expect(asUser(A_AGENT, (db) => db.query(`select credentials_encrypted from channels`))).rejects.toThrow(/permission denied/);
+    await expect(asUser(A_OWNER, (db) => db.query(`select * from channels`))).rejects.toThrow(/permission denied/);
+    expect((await asUser(A_OWNER, (db) => db.query(`select id, config from channels`))).rowCount).toBeGreaterThan(0);
+  });
+});

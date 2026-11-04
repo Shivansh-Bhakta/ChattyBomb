@@ -19,8 +19,8 @@ describe("service-role access", () => {
       lines.forEach((line, i) => {
         if (!line.includes("asService(")) return;
         const scope = line.match(/\/\/ scope: ([a-z-]+)/)?.[1];
-        const window = lines.slice(i, i + 12).join("\n");
-        if (!scope || !SCOPES.includes(scope) || (scope === "tenant" && !/tenant_id|tenantId|tenant/.test(window))) unchecked.push(`${file}:${i + 1}`);
+        const window = lines.slice(i, i + 12).join("\n").replace(/\/\/ scope:[^\n]*/g, "");
+        if (!scope || !SCOPES.includes(scope) || (scope === "tenant" && !/tenant_id|tenantId|\.tenant_id|tenant_id\b/.test(window))) unchecked.push(`${file}:${i + 1}`);
       });
     }
     expect(unchecked).toEqual([]);

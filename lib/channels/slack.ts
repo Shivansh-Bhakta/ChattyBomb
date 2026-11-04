@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import { env, secret } from "../env.ts";
 import { mockSend } from "./mock.ts";
-import type { ChannelAdapter, Parsed } from "./types.ts";
+import { ProviderRejectedError, type ChannelAdapter, type Parsed } from "./types.ts";
 
 const MAX_SKEW_S = 5 * 60;
 
@@ -56,9 +56,9 @@ export const slack: ChannelAdapter = {
   },
 
   async send(target, msg) {
-    if (msg.kind !== "text") throw new Error("Slack has no message templates");
+    if (msg.kind !== "text") throw new ProviderRejectedError("Slack has no message templates");
     if (env().MOCK_MODE) return mockSend("slack", target, msg);
-    if (!target.credentials) throw new Error("Slack channel has no bot token");
+    if (!target.credentials) throw new ProviderRejectedError("Slack channel has no bot token");
     const [channel, threadTs] = target.threadId.split(":");
     const res = await fetch("https://slack.com/api/chat.postMessage", {
       method: "POST",
@@ -67,7 +67,9 @@ export const slack: ChannelAdapter = {
       signal: AbortSignal.timeout(15_000),
     });
     const json = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string; ts?: string; channel?: string };
-    if (!res.ok || !json.ok || !json.ts) throw new Error(`Slack send failed: ${json.error ?? res.status}`);
+    // Slack answers ok:false (HTTP 200) or 4xx when it refused the post; 5xx or a missing ts is unclear.
+    if (json.ok === false || (res.status >= 400 && res.status < 500)) throw new ProviderRejectedError(`Slack send failed: ${json.error ?? res.status}`);
+    if (!res.ok || !json.ts) throw new Error(`Slack send outcome unclear: ${json.error ?? res.status}`);
     return { providerMessageId: `${json.channel ?? channel}:${json.ts}` };
   },
 
