@@ -41,7 +41,7 @@ name, email, created_at`. One user belongs to one tenant.
 `id, tenant_id, type (whatsapp|slack|email), provider (meta|slack|gmail|imap),
 status (not_connected|pending|connected|error), external_id (WA phone_number_id |
 Slack team_id | email address), config jsonb (non-secret: WABA id, Slack channel id,
-IMAP host...), credentials_encrypted bytea, last_error text, connected_by uuid null
+IMAP host...), credentials_encrypted text (`v1:` + base64 AES-GCM), last_error text, connected_by uuid null
 references users, connected_at`
 - `unique (type, external_id)`: routes an inbound webhook to exactly one tenant.
 
