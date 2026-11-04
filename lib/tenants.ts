@@ -30,3 +30,50 @@ export async function createTenant(authUserId: string, email: string, input: z.i
     return t.id as string;
   });
 }
+
+/**
+ * Permanently deletes a tenant and all its data (every tenant table cascades), its stored files
+ * and its users' logins. Leaves one tenant-less audit row as proof of deletion.
+ */
+export async function deleteTenant(tenantId: string, actorUserId: string, confirmName: string) {
+  const { rm } = await import("node:fs/promises");
+  const { join } = await import("node:path");
+  const { env, secret } = await import("./env.ts");
+  const { userIds, name } = await asService(async (db) => {
+    const { rows: [t] } = await db.query(`select name from tenants where id = $1 for update`, [tenantId]);
+    if (!t) throw new Error("tenant not found");
+    if (confirmName.trim() !== t.name) throw new Error("confirmation does not match the business name");
+    const { rows: [actor] } = await db.query(`select role, tenant_id from users where id = $1`, [actorUserId]);
+    if (!(actor?.role === "platform_admin" || (actor?.role === "owner" && actor.tenant_id === tenantId))) throw new Error("only the owner can delete this business");
+    const { rows: users } = await db.query(`select id from users where tenant_id = $1`, [tenantId]);
+    await db.query(`delete from tenants where id = $1`, [tenantId]);
+    await db.query(
+      `insert into audit_log (tenant_id, actor_type, actor_user_id, action, target_type, target_id, metadata)
+       values (null, $1, $2, 'tenant.delete', 'tenant', $3, $4)`,
+      [actor.role === "platform_admin" ? "platform_admin" : "user", actor.role === "platform_admin" ? actorUserId : null, tenantId, { name: t.name, users: users.length }],
+    );
+    return { userIds: users.map((u) => u.id as string), name: t.name as string };
+  });
+
+  // Files and logins live outside Postgres; best effort after the data is gone, errors surfaced.
+  const problems: string[] = [];
+  if (env().MOCK_MODE) {
+    await rm(join(process.cwd(), ".mock-storage", "tenants", tenantId), { recursive: true, force: true });
+    await asService((db) => db.query(`delete from auth.users where id = any($1::uuid[])`, [userIds]));
+  } else {
+    const { createClient } = await import("@supabase/supabase-js");
+    const sb = createClient(env().NEXT_PUBLIC_SUPABASE_URL!, secret("SUPABASE_SERVICE_ROLE_KEY"), { auth: { persistSession: false } });
+    const { data: files, error } = await sb.storage.from("documents").list(`tenants/${tenantId}`, { limit: 1000 });
+    if (error) problems.push(`storage list: ${error.message}`);
+    if (files?.length) {
+      const { error: e } = await sb.storage.from("documents").remove(files.map((f) => `tenants/${tenantId}/${f.name}`));
+      if (e) problems.push(`storage remove: ${e.message}`);
+    }
+    for (const id of userIds) {
+      const { error: e } = await sb.auth.admin.deleteUser(id);
+      if (e) problems.push(`auth user ${id}: ${e.message}`);
+    }
+  }
+  if (problems.length) console.error("[deleteTenant] leftovers for", tenantId, problems);
+  return { name, problems };
+}
