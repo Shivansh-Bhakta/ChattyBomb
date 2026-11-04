@@ -38,7 +38,8 @@ describe("Razorpay webhook", () => {
     expect((await POST(rzp("subscription.activated", sub.rid, "evt_1"))).status).toBe(200);
     expect((await POST(rzp("subscription.activated", sub.rid, "evt_1"))).status).toBe(200); // duplicate delivery
     expect(await q(`select count(*)::int as n from audit_log where action = 'billing.subscription.activated'`)).toEqual([{ n: 1 }]);
-    expect((await q(`select status from tenants where id = $1`, [TENANT_B]))[0].status).toBe("active");
+    // Paying for Growth switches the tenant to Growth and its 2,000-conversation limit.
+    expect((await q(`select status, plan, conversation_limit from tenants where id = $1`, [TENANT_B]))[0]).toEqual({ status: "active", plan: "growth", conversation_limit: 2000 });
 
     await POST(rzp("subscription.halted", sub.rid));
     expect((await q(`select t.status as t, s.status as s from tenants t join subscriptions s on s.tenant_id = t.id where t.id = $1`, [TENANT_B]))[0]).toEqual({ t: "suspended", s: "halted" });

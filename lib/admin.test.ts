@@ -42,6 +42,14 @@ describe("tenant economics", () => {
     expect(o).toMatchObject({ mrr: 2999, activeTenants: 1, pilots: 1 });
   });
 
+  it("does not flag sub-paisa costs as a negative margin", async () => {
+    await q(`insert into usage_events (tenant_id, event_type, quantity, unit_cost_inr, total_cost_inr) values ($1, 'embedding_tokens', 1, 0.0004, 0.0004)`, ["10000000-0000-0000-0000-00000000000b"]);
+    await q(`delete from usage_events where tenant_id = $1 and total_cost_inr >= 1`, ["10000000-0000-0000-0000-00000000000b"]);
+    const b = (await tenantMetrics(ADMIN)).find((r) => r.id === TENANT_B)!;
+    expect(b).toMatchObject({ margin: 0, negative_margin: false });
+    await usage(TENANT_B, CONV_B1, "ai_input_tokens", 30); // restore for later tests
+  });
+
   it("drill-downs: top conversations, per-tenant breakdown, daily trend", async () => {
     const top = await topConversations(ADMIN, null, 20);
     expect(top[0]).toMatchObject({ id: CONV_A1, cost: 120 });

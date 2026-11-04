@@ -43,8 +43,8 @@ export async function tenantMetrics(actorId: string): Promise<TenantRow[]> {
       const paying = r.plan_revenue > 0;
       const revenue = r.plan_revenue + (paying ? r.meta_fees : 0);
       const cost = r.ai_cost + r.meta_fees;
-      const margin = revenue - cost;
-      return { ...r, revenue, cost, margin, margin_pct: revenue > 0 ? margin / revenue : null,
+      const margin = Math.round((revenue - cost) * 100) / 100; // paise precision: sub-paisa costs are not a loss
+      return { ...r, revenue, cost, margin: margin === 0 ? 0 : margin, margin_pct: revenue > 0 ? margin / revenue : null,
         negative_margin: margin < 0, near_limit: r.conversation_limit > 0 && r.conversations >= 0.8 * r.conversation_limit };
     });
   });
