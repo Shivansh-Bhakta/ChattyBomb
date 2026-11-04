@@ -103,3 +103,11 @@ describe("AI pipeline (mock mode, end to end through the WhatsApp webhook)", () 
     expect(mockOutbox).toHaveLength(0);
   });
 });
+
+describe("service-role queries stay inside the tenant", () => {
+  it("processInbound ignores a message id that belongs to another tenant", async () => {
+    const { processInbound } = await import("./pipeline.ts");
+    const [m] = await q(`select id from messages where tenant_id = $1 and direction = 'inbound' limit 1`, [TENANT_A]);
+    expect(await processInbound({ tenantId: "10000000-0000-0000-0000-00000000000b", messageId: m.id })).toEqual({ outcome: "skipped", reason: "not_found" });
+  });
+});

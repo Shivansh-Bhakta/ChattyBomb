@@ -45,22 +45,22 @@ async function fetchNew(provider: string, address: string, credsEnc: string | nu
 
 /** Polls one email channel and ingests new mail. Errors mark the channel so the owner sees them. */
 export async function pollEmail(channelId: string) {
-  const { rows: [ch] } = await asService((db) => db.query(
-    `select id, provider, external_id, config, credentials_encrypted from channels where id = $1 and type = 'email' and status in ('connected', 'error')`, [channelId]));
+  const { rows: [ch] } = await asService((db) => db.query( // scope: platform-job (callers: cron, or checkEmailNow after an RLS check)
+    `select id, tenant_id, provider, external_id, config, credentials_encrypted from channels where id = $1 and type = 'email' and status in ('connected', 'error')`, [channelId]));
   if (!ch) return { ingested: 0 };
   try {
     const { raws, cursor } = await fetchNew(ch.provider, ch.external_id, ch.credentials_encrypted, ch.config);
     const parsed = (await Promise.all(raws.map((r) => parseEmail(r, ch.external_id).catch(() => null)))).filter((m): m is InboundMessage => !!m);
     const stored = await ingestMessages("email", "email", parsed);
-    await asService((db) => db.query(`update channels set config = config || $2, status = 'connected', last_error = null where id = $1`, [ch.id, cursor]));
+    await asService((db) => db.query(`update channels set config = config || $2, status = 'connected', last_error = null where id = $1 and tenant_id = $3`, [ch.id, cursor, ch.tenant_id])); // scope: tenant
     return { ingested: stored.length };
   } catch (e) {
-    await asService((db) => db.query(`update channels set status = 'error', last_error = $2 where id = $1`, [ch.id, (e as Error).message.slice(0, 300)]));
+    await asService((db) => db.query(`update channels set status = 'error', last_error = $2 where id = $1 and tenant_id = $3`, [ch.id, (e as Error).message.slice(0, 300), ch.tenant_id])); // scope: tenant
     throw e;
   }
 }
 
 export async function pollAllEmail() {
-  const { rows } = await asService((db) => db.query(`select id from channels where type = 'email' and status in ('connected', 'error')`));
+  const { rows } = await asService((db) => db.query(`select id from channels where type = 'email' and status in ('connected', 'error')`)); // scope: platform-job
   for (const r of rows) await pollEmail(r.id).catch((e) => console.error("[email poll]", r.id, (e as Error).message));
 }

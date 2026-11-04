@@ -19,7 +19,7 @@ export async function POST(req: Request) {
   if (body.type === "url_verification") return Response.json({ challenge: body.challenge });
 
   // Only DMs to the bot and the one support channel the business chose.
-  const { rows: [ch] } = await asService((db) => db.query(`select config from channels where type = 'slack' and external_id = $1`, [body.team_id]));
+  const { rows: [ch] } = await asService((db) => db.query(`select config from channels where type = 'slack' and external_id = $1`, [body.team_id])); // scope: webhook-lookup
   const supportChannel = ch?.config?.channel_id as string | undefined;
   const wanted = parsed.messages.filter((m) => m.threadId.startsWith("D") || (supportChannel && m.threadId.startsWith(`${supportChannel}:`)));
   await ingestMessages("slack", "slack", wanted);

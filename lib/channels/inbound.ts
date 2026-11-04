@@ -11,7 +11,7 @@ import type { InboundMessage, StatusUpdate } from "./types.ts";
 export async function ingestMessages(provider: string, type: Channel, messages: InboundMessage[]) {
   const stored: { tenantId: string; messageId: string }[] = [];
   for (const m of messages) {
-    const row = await asService(async (db) => {
+    const row = await asService(async (db) => { // scope: webhook-lookup (tenant resolved from channels.external_id, then every write uses it)
       const { rows: [ch] } = await db.query(`select id, tenant_id from channels where type = $1 and external_id = $2 and status = 'connected'`, [type, m.channelExternalId]);
       if (!ch) {
         console.warn(`[inbound] no connected ${type} channel for ${m.channelExternalId}`);
@@ -59,8 +59,8 @@ async function upsertContact(db: import("../db.ts").Db, tenantId: string, from: 
   if (found) {
     await db.query(
       `update contacts set name = case when name = '' then $2 else name end,
-         phone = coalesce(phone, $3), email = coalesce(email, $4), slack_user_id = coalesce(slack_user_id, $5) where id = $1`,
-      [found.id, from.name ?? "", from.phone ?? null, email ?? null, from.slackUserId ?? null],
+         phone = coalesce(phone, $3), email = coalesce(email, $4), slack_user_id = coalesce(slack_user_id, $5) where id = $1 and tenant_id = $6`,
+      [found.id, from.name ?? "", from.phone ?? null, email ?? null, from.slackUserId ?? null, tenantId],
     );
     return found.id as string;
   }
@@ -76,7 +76,7 @@ const RANK = { queued: 0, sent: 1, delivered: 2, read: 3, failed: 4 } as const;
 /** Applies delivery statuses; never downgrades (a late "delivered" after "read" is ignored). */
 export async function applyStatuses(provider: string, type: Channel, statuses: StatusUpdate[]) {
   for (const s of statuses) {
-    await asService(async (db) => {
+    await asService(async (db) => { // scope: webhook-lookup (message matched through the channel's external_id)
       const fresh = await db.query(`insert into webhook_events (provider, event_id) values ($1, $2) on conflict do nothing`, [provider, `status:${s.providerMessageId}:${s.status}`]);
       if (!fresh.rowCount) return;
       await db.query(

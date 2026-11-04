@@ -31,7 +31,7 @@ export async function createReminder(db: Db, userId: string, input: unknown) {
  * Free-form text inside the WhatsApp 24h window, otherwise the reminder's approved template.
  */
 export async function sendDueReminders(limit = 100) {
-  const { rows: due } = await asService((db) => db.query(
+  const { rows: due } = await asService((db) => db.query( // scope: platform-job (all tenants; each send re-checks tenant)
     `update reminders r set status = 'sent', sent_at = now()
        where r.id in (select id from reminders where status = 'scheduled' and due_at <= now() order by due_at limit $1 for update skip locked)
      returning r.id, r.tenant_id, r.conversation_id, r.message, r.template_name,
@@ -54,7 +54,7 @@ export async function sendDueReminders(limit = 100) {
       }
       sent++;
     } catch (e) {
-      await asService((db) => db.query(`update reminders set status = 'failed', error = $2 where id = $1`, [r.id, (e as Error).message.slice(0, 300)]));
+      await asService((db) => db.query(`update reminders set status = 'failed', error = $2 where id = $1 and tenant_id = $3`, [r.id, (e as Error).message.slice(0, 300), r.tenant_id])); // scope: tenant
     }
   }
   return { due: due.length, sent };

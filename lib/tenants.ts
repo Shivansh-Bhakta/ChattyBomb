@@ -14,7 +14,7 @@ export const onboardingSchema = z.object({
 export async function createTenant(authUserId: string, email: string, input: z.infer<typeof onboardingSchema>) {
   const { businessName, ownerName } = onboardingSchema.parse(input);
   const slug = `${businessName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40)}-${randomBytes(3).toString("hex")}`;
-  return asService(async (db) => {
+  return asService(async (db) => { // scope: onboarding (caller has no tenant yet; creates exactly one)
     const existing = await db.query("select 1 from users where id = $1", [authUserId]);
     if (existing.rowCount) throw new Error("user already belongs to a tenant");
     const { rows: [t] } = await db.query(
@@ -39,7 +39,7 @@ export async function deleteTenant(tenantId: string, actorUserId: string, confir
   const { rm } = await import("node:fs/promises");
   const { join } = await import("node:path");
   const { env, secret } = await import("./env.ts");
-  const { userIds, name } = await asService(async (db) => {
+  const { userIds, name } = await asService(async (db) => { // scope: tenant (actor checked as this tenant's owner or platform admin)
     const { rows: [t] } = await db.query(`select name from tenants where id = $1 for update`, [tenantId]);
     if (!t) throw new Error("tenant not found");
     if (confirmName.trim() !== t.name) throw new Error("confirmation does not match the business name");
@@ -59,7 +59,7 @@ export async function deleteTenant(tenantId: string, actorUserId: string, confir
   const problems: string[] = [];
   if (env().MOCK_MODE) {
     await rm(join(process.cwd(), ".mock-storage", "tenants", tenantId), { recursive: true, force: true });
-    await asService((db) => db.query(`delete from auth.users where id = any($1::uuid[])`, [userIds]));
+    await asService((db) => db.query(`delete from auth.users where id = any($1::uuid[])`, [userIds])); // scope: mock-auth (MOCK_MODE only)
   } else {
     const { createClient } = await import("@supabase/supabase-js");
     const sb = createClient(env().NEXT_PUBLIC_SUPABASE_URL!, secret("SUPABASE_SERVICE_ROLE_KEY"), { auth: { persistSession: false } });

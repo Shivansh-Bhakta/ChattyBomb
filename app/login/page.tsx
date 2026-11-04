@@ -7,7 +7,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const sp = await searchParams;
   const mock = mockAuthAllowed();
   const users = mock
-    ? (await asService((db) => db.query(`select u.id, u.name, u.role, t.name as tenant from users u left join tenants t on t.id = u.tenant_id order by t.name nulls first, u.role`))).rows
+    ? (await asService((db) => db.query(`select u.id, u.name, u.role, t.name as tenant from users u left join tenants t on t.id = u.tenant_id order by t.name nulls first, u.role`))).rows // scope: mock-auth (MOCK_MODE only)
     : [];
   return (
     <main className="mx-auto mt-24 max-w-sm space-y-4">

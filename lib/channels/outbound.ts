@@ -19,7 +19,7 @@ const countryOf = (phone: string | null) => (phone?.startsWith("+91") ? "IN" : "
  * storing it, and metering it. tenantId is always checked against the conversation.
  */
 export async function sendMessage(tenantId: string, conversationId: string, msg: OutboundMessage, sender: Sender) {
-  const ctx = await asService(async (db) => {
+  const ctx = await asService(async (db) => { // scope: tenant
     const { rows: [c] } = await db.query(
       `select c.id, c.last_inbound_at, c.external_thread_id, ch.type, ch.external_id, ch.config, ch.credentials_encrypted, ch.status as channel_status,
               ct.phone, ct.email
@@ -47,9 +47,9 @@ export async function sendMessage(tenantId: string, conversationId: string, msg:
         to: (c.type === "email" ? c.email : c.type === "whatsapp" ? c.phone : null) ?? c.external_thread_id, threadId: c.external_thread_id, config: c.config },
       msg,
     );
-    await asService(async (db) => {
-      await db.query(`update messages set status = 'sent', provider_message_id = $2 where id = $1`, [messageId, providerMessageId]);
-      await db.query(`update conversations set last_message_at = now() where id = $1`, [conversationId]);
+    await asService(async (db) => { // scope: tenant
+      await db.query(`update messages set status = 'sent', provider_message_id = $2 where id = $1 and tenant_id = $3`, [messageId, providerMessageId, tenantId]);
+      await db.query(`update conversations set last_message_at = now() where id = $1 and tenant_id = $2`, [conversationId, tenantId]);
       if (c.type === "whatsapp") {
         const template = msg.kind === "template";
         await record(db, {
@@ -62,7 +62,7 @@ export async function sendMessage(tenantId: string, conversationId: string, msg:
     });
     return { messageId, providerMessageId };
   } catch (e) {
-    await asService((db) => db.query(`update messages set status = 'failed', error = $2 where id = $1`, [messageId, (e as Error).message.slice(0, 500)]));
+    await asService((db) => db.query(`update messages set status = 'failed', error = $2 where id = $1 and tenant_id = $3`, [messageId, (e as Error).message.slice(0, 500), tenantId])); // scope: tenant
     throw e;
   }
 }

@@ -13,7 +13,7 @@ export async function authUser(): Promise<{ id: string; email: string } | null> 
   if (mockAuthAllowed()) {
     const v = (await cookies()).get(MOCK_COOKIE)?.value;
     if (!z.guid().safeParse(v).success) return null;
-    const { rows } = await asService((db) => db.query("select id, email from auth.users where id = $1", [v]));
+    const { rows } = await asService((db) => db.query("select id, email from auth.users where id = $1", [v])); // scope: mock-auth (MOCK_MODE only)
     return rows[0] ?? null;
   }
   const { data } = await (await supabaseServer()).auth.getUser();
