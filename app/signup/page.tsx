@@ -9,6 +9,7 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
       {sp.deleted && <p className="text-sm text-emerald-700">Your business and all its data were deleted.</p>}
       {sp.error && <p className="text-sm text-red-600">{sp.error === "exists" ? "That email already has an account." : "Could not sign up."}</p>}
       <form action={signup} className="card space-y-3">
+        <input type="hidden" name="ref" value={sp.ref ?? sp.utm_source ?? ""} />
         <input name="email" type="email" required placeholder="Work email" className="input" />
         <input name="password" type="password" required minLength={8} placeholder="Password (8+ characters)" className="input" />
         <button className="btn w-full">Create account</button>
