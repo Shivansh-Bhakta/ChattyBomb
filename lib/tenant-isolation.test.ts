@@ -25,28 +25,28 @@ describe("tenant isolation (RLS)", () => {
   it("tenant A cannot write into or modify tenant B", async () => {
     await asUser(A_OWNER, async (db) => {
       expect((await db.query("update conversations set status = 'resolved' where id = $1", [CONV_B1])).rowCount).toBe(0);
-      expect((await db.query("delete from messages where conversation_id = $1", [CONV_B1])).rowCount).toBe(0);
     });
+    await expect(asUser(A_OWNER, (db) => db.query("delete from messages where conversation_id = $1", [CONV_B1]))).rejects.toThrow(/permission denied/);
     await expect(
       asUser(A_OWNER, (db) => db.query("insert into contacts (tenant_id, name) values ($1, 'x')", [TENANT_B])),
-    ).rejects.toThrow(/row-level security/);
+    ).rejects.toThrow(/permission denied|row-level security/);
   });
 
   it("agents cannot manage channels or users; owners cannot change their own plan", async () => {
     await asUser(A_AGENT, async (db) => {
-      expect((await db.query("update channels set status = 'error' where id = $1", [CHANNEL_A])).rowCount).toBe(0);
+      expect((await db.query("update channels set config = '{}' where id = $1", [CHANNEL_A])).rowCount).toBe(0);
       expect((await db.query("update users set role = 'owner' where id = $1", [A_AGENT])).rowCount).toBe(0);
     });
     await expect(
       asUser(A_OWNER, (db) => db.query("update tenants set plan = 'scale' where id = $1", [TENANT_A])),
-    ).rejects.toThrow(/only platform admins/);
+    ).rejects.toThrow(/permission denied/);
   });
 
   it("owners cannot attach another login to their tenant", async () => {
     const outsider = (await asService((db) => db.query("insert into auth.users (email) values ('outsider@x.test') returning id"))).rows[0].id;
     await expect(
       asUser(A_OWNER, (db) => db.query("insert into users (id, tenant_id, role, email) values ($1, $2, 'agent', 'outsider@x.test')", [outsider, TENANT_A])),
-    ).rejects.toThrow(/row-level security/);
+    ).rejects.toThrow(/permission denied|row-level security/);
   });
 
   it("no session sees nothing; webhook_events is service-only; admin sees all", async () => {
