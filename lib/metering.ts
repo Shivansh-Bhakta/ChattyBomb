@@ -43,13 +43,14 @@ export type UsageInput = {
 };
 
 /**
- * Writes one usage_events row. A missing rate never blocks the billable action:
- * the row is kept with rate_id null and cost 0 (meta.missing_rate) so it can be re-priced.
+ * Writes one usage_events row. A missing rate never blocks the billable action, and is never silent:
+ * the row keeps its quantity (so it can be re-priced) with cost 0 and meta.unpriced=true, a platform-only
+ * `metering.unpriced` audit event is written (tenant_id null, invisible to tenants), and console.error fires.
  */
 export async function record(db: Db, u: UsageInput) {
   if (!Number.isFinite(u.quantity) || u.quantity < 0) throw new Error("quantity must be a non-negative number");
   const at = new Date();
-  let rateId: string | null = null, unit = 0, meta = u.meta ?? {};
+  let rateId: string | null = null, unit = 0, meta = u.meta ?? {}, unpriced = false;
   if (u.rateKey) {
     try {
       const rate = await currentRate(db, u.rateKey, at);
@@ -57,15 +58,33 @@ export async function record(db: Db, u: UsageInput) {
       unit = await inrPerUnit(db, rate, at);
       rateId = rate.id;
     } catch (e) {
-      console.error("[metering]", (e as Error).message);
-      meta = { ...meta, missing_rate: u.rateKey };
+      console.error(`[metering] UNPRICED ${u.eventType} x${u.quantity} for tenant ${u.tenantId}: ${(e as Error).message}`);
+      meta = { ...meta, unpriced: true, missing_rate: u.rateKey };
+      unpriced = true;
     }
   }
-  await db.query(
+  const { rows: [row] } = await db.query(
     `insert into usage_events (tenant_id, conversation_id, channel, event_type, quantity, rate_id, unit_cost_inr, total_cost_inr, model, meta)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning id`,
     [u.tenantId, u.conversationId ?? null, u.channel ?? null, u.eventType, u.quantity, rateId, unit, unit * u.quantity, u.model ?? null, meta],
   );
+  if (unpriced) {
+    await db.query(
+      `insert into audit_log (tenant_id, actor_type, action, target_type, target_id, metadata) values (null, 'system', 'metering.unpriced', 'usage_event', $1, $2)`,
+      [row.id, { tenant_id: u.tenantId, rate_key: u.rateKey, event_type: u.eventType, quantity: u.quantity }],
+    );
+  }
+}
+
+/** Platform-admin warning counter: unpriced usage rows in the last `days` days, by rate key. */
+export async function unpricedSummary(db: Db, days = 30) {
+  const { rows } = await db.query(
+    `select metadata->>'rate_key' as rate_key, count(*)::int as events from audit_log
+      where action = 'metering.unpriced' and tenant_id is null and created_at > now() - make_interval(days => $1)
+      group by 1 order by 2 desc`,
+    [days],
+  );
+  return { total: rows.reduce((n, r) => n + r.events, 0), byRateKey: rows as { rate_key: string; events: number }[] };
 }
 
 /** Anthropic response `usage` → one ledger row per non-zero component. */

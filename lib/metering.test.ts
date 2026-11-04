@@ -1,7 +1,7 @@
-import { afterAll, describe, expect, it } from "vitest";
-import { asService, closePool } from "./db.ts";
-import { conversationsThisMonth, markConversationBilled, record, recordAnthropicUsage } from "./metering.ts";
-import { CONV_A1, TENANT_A } from "../test/ids.ts";
+import { afterAll, describe, expect, it, vi } from "vitest";
+import { asService, asUser, closePool } from "./db.ts";
+import { conversationsThisMonth, markConversationBilled, record, recordAnthropicUsage, unpricedSummary } from "./metering.ts";
+import { A_OWNER, ADMIN, CONV_A1, TENANT_A } from "../test/ids.ts";
 
 afterAll(closePool);
 
@@ -25,11 +25,24 @@ describe("cost ledger", () => {
     expect(row.total_cost_inr).toBeCloseTo(170, 4);
   }));
 
-  it("keeps the row with zero cost when a rate is missing (never blocks, never guesses)", () => inTx(async (db) => {
+  it("marks a missing rate as unpriced, writes a platform-only event, logs, and counts it", () => inTx(async (db) => {
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    const before = (await unpricedSummary(db)).total;
     await record(db, { tenantId: TENANT_A, eventType: "wa_template_message", quantity: 1, rateKey: "meta:marketing:XX" });
     const [row] = await lastRows(db, 1);
-    expect(row).toMatchObject({ total_cost_inr: 0, rate_id: null, meta: { missing_rate: "meta:marketing:XX" } });
+    expect(row).toMatchObject({ rate_id: null, meta: { unpriced: true, missing_rate: "meta:marketing:XX" } });
+    expect(err).toHaveBeenCalledWith(expect.stringMatching(/UNPRICED wa_template_message/));
+    const summary = await unpricedSummary(db);
+    expect(summary.total).toBe(before + 1);
+    expect(summary.byRateKey).toContainEqual({ rate_key: "meta:marketing:XX", events: 1 });
+    err.mockRestore();
   }));
+
+  it("the unpriced counter is visible to platform admins only", async () => {
+    await asService((db) => record(db, { tenantId: TENANT_A, eventType: "storage_mb", quantity: 2, rateKey: "storage:none" }));
+    expect((await asUser(ADMIN, (db) => unpricedSummary(db))).total).toBeGreaterThan(0);
+    expect((await asUser(A_OWNER, (db) => unpricedSummary(db))).total).toBe(0);
+  });
 
   it("splits Anthropic usage into input, output, cache read and cache write rows", () => inTx(async (db) => {
     await recordAnthropicUsage(db, { tenantId: TENANT_A, conversationId: CONV_A1 }, "claude-haiku-5-5",
