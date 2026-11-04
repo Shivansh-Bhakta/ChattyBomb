@@ -13,3 +13,9 @@
 - Run: `npm test` (lib/metering.test.ts). Placeholder rates are in `supabase/seed.sql`.
 - Skipped/unchecked: all seeded prices are PLACEHOLDERS (no network to check Anthropic/Meta/Voyage pricing); storage_mb metering; rate editing UI (M10).
 - Missing rate → row kept at cost 0 with `meta.missing_rate` (never blocks a send). Next: M3 inbox UI.
+
+## M3: unified inbox
+- Done: `/inbox` list (channel badge, contact, last message, status, assignee, unread, search, status/channel filters) + thread (notes, status, assign, take-over toggle), all via RLS + audit log; Supabase Realtime refresh.
+- Run: `npm run db:reset && npm run dev` → /login → Dr. Mehta → Inbox. Tests: `npm test` (lib/inbox.test.ts).
+- Skipped/unchecked: Realtime untested (no Supabase here); server actions only covered by a manual Playwright smoke run, no unit tests; no pagination past 100.
+- Next: M4 WhatsApp adapter (mock), 24h window, delivery statuses, metering.
