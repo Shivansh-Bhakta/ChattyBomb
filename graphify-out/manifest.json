@@ -108,10 +108,10 @@
     "semantic_hash": "2f4fda8f79cdb89847ade211384371d0"
   },
   "lib/tenant-isolation.test.ts": {
-    "mtime": 1793820569.0964944,
-    "seen": 1793820874.6903155,
-    "ast_hash": "34b41c9b193dd7505226efeb16365d09",
-    "semantic_hash": "34b41c9b193dd7505226efeb16365d09"
+    "mtime": 1793822315.2334633,
+    "seen": 1793822360.759535,
+    "ast_hash": "9616c181a007d51c6bdac38ddcf5116f",
+    "semantic_hash": ""
   },
   "lib/tenants.ts": {
     "mtime": 1793822149.4324584,
@@ -258,9 +258,9 @@
     "semantic_hash": ""
   },
   "docs/HANDOFF.md": {
-    "mtime": 1793822250.2164562,
-    "seen": 1793822251.8982859,
-    "ast_hash": "1f7ae02ad2d2cb0e9f41a07719eff732",
+    "mtime": 1793822359.1604536,
+    "seen": 1793822360.759603,
+    "ast_hash": "2d2dcdf44e492e32f88d02e9812bf726",
     "semantic_hash": ""
   },
   "app/(app)/documents/page.tsx": {
@@ -615,6 +615,18 @@
     "mtime": 1793822149.431704,
     "seen": 1793822251.8982542,
     "ast_hash": "015257e20066cc2d30140cd36580380d",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/0004_users_no_owner_insert.sql": {
+    "mtime": 1793822315.2164545,
+    "seen": 1793822360.759568,
+    "ast_hash": "abc622751024f7afd4e7f3835ccb7351",
+    "semantic_hash": ""
+  },
+  "docs/REVIEW_FIRST.md": {
+    "mtime": 1793822351.2404537,
+    "seen": 1793822360.759607,
+    "ast_hash": "0647dce41e1df9dbc89764167fefca2f",
     "semantic_hash": ""
   },
   "package-lock.json": {

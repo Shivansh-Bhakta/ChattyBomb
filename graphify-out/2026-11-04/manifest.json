@@ -12,9 +12,9 @@
     "semantic_hash": ""
   },
   "app/(app)/layout.tsx": {
-    "mtime": 1793822053.6253257,
-    "seen": 1793822122.3847408,
-    "ast_hash": "6ad718d76f54289faec332907a67e12c",
+    "mtime": 1793822179.3764577,
+    "seen": 1793822251.8981464,
+    "ast_hash": "49732a9724e8600ba0d00c57a1c664e8",
     "semantic_hash": ""
   },
   "app/actions/auth.ts": {
@@ -54,10 +54,10 @@
     "semantic_hash": "8e3503069d418b3ab2770a86ff80c6ba"
   },
   "app/signup/page.tsx": {
-    "mtime": 1793820620.6441002,
-    "seen": 1793820874.6903038,
-    "ast_hash": "57d313eb6cae24f8d2a26b6ad4d9251a",
-    "semantic_hash": "57d313eb6cae24f8d2a26b6ad4d9251a"
+    "mtime": 1793822179.377806,
+    "seen": 1793822251.8981924,
+    "ast_hash": "31e985d1c6876f9a2a4877c61112fb3a",
+    "semantic_hash": ""
   },
   "lib/auth.ts": {
     "mtime": 1793820665.1121469,
@@ -114,10 +114,10 @@
     "semantic_hash": "34b41c9b193dd7505226efeb16365d09"
   },
   "lib/tenants.ts": {
-    "mtime": 1793820549.7484949,
-    "seen": 1793820874.690317,
-    "ast_hash": "79b9106af2dcd11ef85ec90803df86ef",
-    "semantic_hash": "79b9106af2dcd11ef85ec90803df86ef"
+    "mtime": 1793822149.4324584,
+    "seen": 1793822251.898253,
+    "ast_hash": "8909fb4df7e567cb451ae727727c9999",
+    "semantic_hash": ""
   },
   "next.config.ts": {
     "mtime": 1793820434.3193984,
@@ -198,10 +198,10 @@
     "semantic_hash": "c98dbebb744eadc1acc4b9f58bfe0f42"
   },
   "CLAUDE.md": {
-    "mtime": 1793820700.2227767,
-    "seen": 1793820874.6903355,
-    "ast_hash": "aadf84df91c7b9f12cad9e97000363ee",
-    "semantic_hash": "aadf84df91c7b9f12cad9e97000363ee"
+    "mtime": 1793822250.2276454,
+    "seen": 1793822251.8982797,
+    "ast_hash": "91a74734bbbe7bc76c33a41b17f2b276",
+    "semantic_hash": ""
   },
   "docs/ARCHITECTURE.md": {
     "mtime": 1793820240.7511485,
@@ -258,9 +258,9 @@
     "semantic_hash": ""
   },
   "docs/HANDOFF.md": {
-    "mtime": 1793822120.160459,
-    "seen": 1793822122.3850513,
-    "ast_hash": "2ff627d39b236cda813489389fed9195",
+    "mtime": 1793822250.2164562,
+    "seen": 1793822251.8982859,
+    "ast_hash": "1f7ae02ad2d2cb0e9f41a07719eff732",
     "semantic_hash": ""
   },
   "app/(app)/documents/page.tsx": {
@@ -585,6 +585,36 @@
     "mtime": 1793822009.403563,
     "seen": 1793822122.3850136,
     "ast_hash": "2ae9d128f3c9df3b058b1af2525c2eea",
+    "semantic_hash": ""
+  },
+  "app/(app)/settings/audit/page.tsx": {
+    "mtime": 1793822179.3364577,
+    "seen": 1793822251.8981555,
+    "ast_hash": "5050794997e9101225329661ee969c72",
+    "semantic_hash": ""
+  },
+  "app/(app)/settings/page.tsx": {
+    "mtime": 1793822207.0352128,
+    "seen": 1793822251.8981602,
+    "ast_hash": "8fb5b203e1cee3ab40271fcbd8879a8a",
+    "semantic_hash": ""
+  },
+  "app/actions/tenant.ts": {
+    "mtime": 1793822179.33233,
+    "seen": 1793822251.8981707,
+    "ast_hash": "6c378e44f043e51c114d27bf3c2cbc25",
+    "semantic_hash": ""
+  },
+  "lib/tenant-lifecycle.test.ts": {
+    "mtime": 1793822210.6595073,
+    "seen": 1793822251.8982518,
+    "ast_hash": "ec6d8b58f5b5976b252a34e15456ba6c",
+    "semantic_hash": ""
+  },
+  "lib/usage.ts": {
+    "mtime": 1793822149.431704,
+    "seen": 1793822251.8982542,
+    "ast_hash": "015257e20066cc2d30140cd36580380d",
     "semantic_hash": ""
   },
   "package-lock.json": {
