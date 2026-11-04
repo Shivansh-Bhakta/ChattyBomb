@@ -10,6 +10,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <span className="font-semibold text-emerald-700">ChattyBomb</span>
         <Link href="/inbox">Inbox</Link>
         <Link href="/documents">Documents</Link>
+        <Link href="/settings/channels">Channels</Link>
         <span className="ml-auto text-slate-500">{me.name} · {me.role}</span>
         <form action={logout}><button className="text-slate-500 underline">Log out</button></form>
       </header>

@@ -232,5 +232,47 @@
     "seen": 1793820874.6903398,
     "ast_hash": "b361920bced3d31a187e7b5eea69b533",
     "semantic_hash": "b361920bced3d31a187e7b5eea69b533"
+  },
+  "lib/inbox.test.ts": {
+    "mtime": 1793820846.0644882,
+    "seen": 1793820876.5619988,
+    "ast_hash": "667deb1a32cba308bde7019e8d2b1da1",
+    "semantic_hash": ""
+  },
+  "lib/inbox.ts": {
+    "mtime": 1793820846.0643506,
+    "seen": 1793820876.5620012,
+    "ast_hash": "bfa8e2ef1c7fe9e1daf6a66ba6b3442b",
+    "semantic_hash": ""
+  },
+  "lib/metering.test.ts": {
+    "mtime": 1793820812.807444,
+    "seen": 1793820876.5620024,
+    "ast_hash": "18a041ca6ae55be529a53087e1818aa7",
+    "semantic_hash": ""
+  },
+  "lib/metering.ts": {
+    "mtime": 1793820797.8957527,
+    "seen": 1793820876.5620046,
+    "ast_hash": "14186cb114044997f7c90515935e4746",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1793819419.6435385,
+    "seen": 1793820876.5620513,
+    "ast_hash": "68b329da9893e34099c7d8ad5cb9c940",
+    "semantic_hash": ""
+  },
+  "docs/HANDOFF.md": {
+    "mtime": 1793820826.0749252,
+    "seen": 1793820876.562058,
+    "ast_hash": "122ae2e5b3c2043e1a557966be05cf3c",
+    "semantic_hash": ""
+  },
+  "package-lock.json": {
+    "mtime": 1793820423.840498,
+    "seen": 1793820876.562065,
+    "ast_hash": "cf66447ae33aa63f1f4a69e806e25010",
+    "semantic_hash": ""
   }
 }

@@ -11,6 +11,7 @@ export default defineConfig({
       ENCRYPTION_KEY: "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
       WHATSAPP_APP_SECRET: "test-app-secret",
       WHATSAPP_VERIFY_TOKEN: "test-verify-token",
+      SLACK_SIGNING_SECRET: "test-slack-secret",
     },
     fileParallelism: false,
   },

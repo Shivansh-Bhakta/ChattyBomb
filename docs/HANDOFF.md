@@ -31,3 +31,9 @@
 - Run: `npm test` (lib/ai/ai.test.ts); `npm run eval` (MOCK_MODE=true: 18/20, the two misses are the lexical mock; MOCK_MODE=false calls Anthropic + Voyage and costs money).
 - Skipped/unchecked: no real Anthropic/Voyage call ever made; retrieval/confidence thresholds (0.35/0.6) untuned; no holding message to the customer on handoff; AI-suggested replies in the inbox; leads saving (M8); scanned PDFs (no OCR); ingestion runs inline in the upload request.
 - Next: M6 Slack adapter.
+
+## M6: Slack adapter
+- Done: `lib/channels/slack.ts` (v0 signing secret + 5-min replay window, bot/edit/join events ignored, DMs = one conversation per DM, support channel = one conversation per thread, replies in thread), OAuth install (`/api/slack/install` → `/api/slack/oauth`, state cookie, token encrypted, one workspace per tenant), `/api/webhooks/slack`, `/settings/channels` to pick the support channel. Adapter interface unchanged.
+- Run: `npm test` (lib/channels/slack.test.ts); app: /settings/channels → Connect Slack (mock install). Real: set SLACK_SIGNING_SECRET, SLACK_CLIENT_ID, SLACK_CLIENT_SECRET, APP_URL; Slack app needs scopes chat:write, im:history, channels:history, groups:history and event `message.im`, `message.channels`, `message.groups` → `{APP_URL}/api/webhooks/slack`.
+- Skipped/unchecked: Slack user names (contacts show the Slack user id; needs users:read), files/attachments, uninstall event, real Slack never called.
+- Next: M7 email adapter.
