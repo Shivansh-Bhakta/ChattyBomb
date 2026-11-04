@@ -7,6 +7,7 @@ import { answer } from "./answer.ts";
 import { classify } from "./classify.ts";
 import type { Usage } from "./claude.ts";
 import { afterAnswer, beforeAnswer } from "./handoff.ts";
+import { notifyLimitReached } from "../billing/lifecycle.ts";
 import { retrieve } from "./retrieve.ts";
 
 export type Outcome = "skipped" | "replied" | "handoff";
@@ -42,6 +43,7 @@ export async function processInbound({ tenantId, messageId }: { tenantId: string
     return { m, skip, transcript: history.reverse().map((h) => `${h.direction === "inbound" ? "Customer" : "Business"}: ${h.body}`).join("\n") };
   });
   if (!ctx) return { outcome: "skipped", reason: "not_found" };
+  if (ctx.skip === "over_limit") await notifyLimitReached(tenantId);
   if (ctx.skip) return { outcome: "skipped", reason: ctx.skip };
   const { m, transcript } = ctx;
   const base = { tenantId, conversationId: m.conversation_id as string, channel: m.channel as Channel };

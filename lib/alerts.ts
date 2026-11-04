@@ -1,8 +1,7 @@
-import nodemailer from "nodemailer";
 import { z } from "zod";
 import { assertPlatformAdmin } from "./admin.ts";
 import { asService, type Db } from "./db.ts";
-import { env } from "./env.ts";
+import { mockMail, sendMail } from "./mailer.ts";
 
 export const alertSettingsSchema = z.object({
   email: z.string().trim().toLowerCase().email().optional(),
@@ -25,15 +24,8 @@ export async function setAlertSettings(actorId: string, input: unknown) {
   });
 }
 
-/** MOCK_MODE: alert emails land here instead of SMTP. */
-export const mockAlerts: { to: string; subject: string; text: string }[] = [];
-
-async function sendAlert(to: string, subject: string, text: string) {
-  if (env().MOCK_MODE) return void mockAlerts.push({ to, subject, text });
-  const url = process.env.ALERT_SMTP_URL;
-  if (!url) throw new Error("ALERT_SMTP_URL is not set");
-  await nodemailer.createTransport(url).sendMail({ from: process.env.ALERT_FROM ?? "alerts@chattybomb.local", to, subject, text });
-}
+export const mockAlerts = mockMail;
+const sendAlert = sendMail;
 
 /**
  * Emails the platform owner when today's (IST) total AI spend, or one tenant's total spend, crosses

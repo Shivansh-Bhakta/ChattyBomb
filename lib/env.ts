@@ -28,6 +28,11 @@ const schema = z
     SLACK_CLIENT_SECRET: z.string().optional(),
     GOOGLE_CLIENT_ID: z.string().optional(),
     GOOGLE_CLIENT_SECRET: z.string().optional(),
+    RAZORPAY_KEY_ID: z.string().optional(),
+    RAZORPAY_KEY_SECRET: z.string().optional(),
+    RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
+    RAZORPAY_PLAN_STARTER: z.string().optional(),
+    RAZORPAY_PLAN_GROWTH: z.string().optional(),
   })
   .superRefine((e, ctx) => {
     if (e.MOCK_MODE) return;
@@ -53,7 +58,7 @@ export function env(): Env {
 export const mockAuthAllowed = () => env().MOCK_MODE && env().NODE_ENV !== "production" && isLocalDeployment(process.env);
 
 /** Fetches a secret by name only when a real call needs it. */
-export function secret(name: "ANTHROPIC_API_KEY" | "VOYAGE_API_KEY" | "SUPABASE_SERVICE_ROLE_KEY" | "SLACK_SIGNING_SECRET" | "SLACK_CLIENT_ID" | "SLACK_CLIENT_SECRET" | "GOOGLE_CLIENT_ID" | "GOOGLE_CLIENT_SECRET" | "WHATSAPP_APP_SECRET" | "WHATSAPP_VERIFY_TOKEN"): string {
+export function secret(name: "ANTHROPIC_API_KEY" | "VOYAGE_API_KEY" | "SUPABASE_SERVICE_ROLE_KEY" | "SLACK_SIGNING_SECRET" | "SLACK_CLIENT_ID" | "SLACK_CLIENT_SECRET" | "GOOGLE_CLIENT_ID" | "GOOGLE_CLIENT_SECRET" | "RAZORPAY_KEY_ID" | "RAZORPAY_KEY_SECRET" | "RAZORPAY_WEBHOOK_SECRET" | "RAZORPAY_PLAN_STARTER" | "RAZORPAY_PLAN_GROWTH" | "WHATSAPP_APP_SECRET" | "WHATSAPP_VERIFY_TOKEN"): string {
   const v = env()[name];
   if (!v) throw new Error(`${name} is not set`);
   return v;
