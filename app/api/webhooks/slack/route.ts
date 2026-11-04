@@ -1,14 +1,16 @@
 import { asService } from "@/lib/db";
 import { ingestMessages } from "@/lib/channels/inbound";
 import { slack, slackBody } from "@/lib/channels/slack";
+import { rejectUnverified, tooLarge } from "@/lib/rate-limit";
 import "@/lib/ai/pipeline"; // registers the message.received handler (inline in MOCK_MODE)
 
 const MAX_BODY = 1_000_000;
 
 export async function POST(req: Request) {
+  if (tooLarge(req.headers, MAX_BODY)) return new Response("too large", { status: 413 });
   const raw = await req.text();
   if (raw.length > MAX_BODY) return new Response("too large", { status: 413 });
-  if (!slack.verify(raw, req.headers)) return new Response("invalid signature", { status: 401 });
+  if (!slack.verify(raw, req.headers)) return rejectUnverified("slack", req.headers, 401, "invalid signature");
   let body, parsed;
   try {
     body = slackBody.parse(JSON.parse(raw));
