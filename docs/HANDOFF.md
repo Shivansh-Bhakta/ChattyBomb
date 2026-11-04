@@ -19,3 +19,9 @@
 - Run: `npm run db:reset && npm run dev` → /login → Dr. Mehta → Inbox. Tests: `npm test` (lib/inbox.test.ts).
 - Skipped/unchecked: Realtime untested (no Supabase here); server actions only covered by a manual Playwright smoke run, no unit tests; no pagination past 100.
 - Next: M4 WhatsApp adapter (mock), 24h window, delivery statuses, metering.
+
+## M4: WhatsApp adapter
+- Done: `lib/channels/{types,whatsapp,mock,inbound,outbound}.ts`, webhook `app/api/webhooks/whatsapp` (verify handshake, X-Hub-Signature-256, Zod, dedupe in the same tx as the insert), 24h window, delivery statuses (never downgrade), contact merge, metering per send, agent reply in inbox, Inngest route.
+- Run: `npm test` (lib/channels/whatsapp.test.ts); in the app, reply from /inbox (mock send). Real: set WHATSAPP_APP_SECRET, WHATSAPP_VERIFY_TOKEN, MOCK_MODE=false, store the channel token encrypted.
+- Skipped/unchecked: webhook rate limiting (M13), media messages stored as "[type message]" only, Graph API version default v23.0 unverified, real Meta send never exercised, template send UI (M8).
+- Next: M5 documents + RAG + AI replies + handoff + eval.

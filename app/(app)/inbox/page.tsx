@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { addNote, assign, setAiPaused, setStatus } from "@/app/actions/inbox";
+import { addNote, assign, sendReply, setAiPaused, setStatus } from "@/app/actions/inbox";
+import { adapterFor } from "@/lib/channels";
 import { LiveRefresh } from "@/components/live-refresh";
 import { requireMember } from "@/lib/auth";
 import { asUser } from "@/lib/db";
@@ -12,7 +13,8 @@ const time = (d: Date) => new Date(d).toLocaleString("en-IN", { timeZone: "Asia/
 
 export default async function InboxPage({ searchParams }: { searchParams: Promise<Record<string, string>> }) {
   const me = await requireMember();
-  const f = filtersSchema.parse(await searchParams);
+  const sp = await searchParams;
+  const f = filtersSchema.parse(sp);
   const [list, thread] = await asUser(me.id, async (db) => {
     const t = f.c ? await getThread(db, f.c) : null;
     if (t?.conv.unread_count) await db.query("update conversations set unread_count = 0 where id = $1", [f.c]);
@@ -99,6 +101,16 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
                 </li>
               ))}
             </ol>
+            {sp.error && <p className="bg-red-50 p-2 text-sm text-red-700">{sp.error === "window" ? "The 24-hour WhatsApp window is closed: only approved templates can be sent." : "Sending failed. Check the channel connection."}</p>}
+            {adapterFor(thread.conv.channel).canSendFreeform(thread.conv) ? (
+              <form action={sendReply} className="flex gap-2 border-t border-slate-200 bg-white p-3">
+                <input type="hidden" name="conversationId" value={thread.conv.id} />
+                <textarea name="body" required maxLength={4096} rows={2} placeholder={`Reply on ${thread.conv.channel}`} className="input" />
+                <button className="btn">Send</button>
+              </form>
+            ) : (
+              <p className="border-t border-slate-200 bg-amber-50 p-3 text-sm text-amber-800">24-hour window closed. Only approved WhatsApp templates can be sent (coming in M8).</p>
+            )}
             <form action={addNote} className="flex gap-2 border-t border-slate-200 bg-white p-3">
               <input type="hidden" name="conversationId" value={thread.conv.id} />
               <input name="body" required maxLength={5000} placeholder="Internal note (not sent to the customer)" className="input" />
