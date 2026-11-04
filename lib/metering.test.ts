@@ -64,3 +64,17 @@ describe("cost ledger", () => {
     expect(await conversationsThisMonth(db, TENANT_A)).toBe(before + 1);
   }));
 });
+
+describe("default AI models are priced", () => {
+  it("answers default to claude-sonnet-5-5, and every default model has all four rates", async () => {
+    const { env } = await import("./env.ts");
+    expect(env().AI_ANSWER_MODEL).toBe("claude-sonnet-5-5");
+    const { currentRate } = await import("./metering.ts");
+    for (const model of [env().AI_ANSWER_MODEL, env().AI_CLASSIFY_MODEL]) {
+      for (const k of ["input_per_mtok", "output_per_mtok", "cache_read_per_mtok", "cache_write_per_mtok"]) {
+        expect(await asService((db) => currentRate(db, `anthropic:${model}:${k}`)), `${model}:${k}`).not.toBeNull();
+      }
+    }
+    expect(await asService((db) => currentRate(db, `voyage:${env().EMBEDDING_MODEL}:per_mtok`))).not.toBeNull();
+  });
+});

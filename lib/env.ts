@@ -11,7 +11,7 @@ const schema = z
     NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional(),
     ANTHROPIC_API_KEY: z.string().optional(),
     AI_CLASSIFY_MODEL: z.string().default("claude-haiku-5-5"),
-    AI_ANSWER_MODEL: z.string().default("claude-opus-5-5"),
+    AI_ANSWER_MODEL: z.string().default("claude-sonnet-5-5"),
     AI_MIN_RETRIEVAL_SCORE: z.coerce.number().min(0).max(1).optional(),
     AI_MIN_CONFIDENCE: z.coerce.number().min(0).max(1).default(0.6),
     AI_EMAIL_DAILY_REPLY_CAP: z.coerce.number().int().min(0).max(1000).default(5),
