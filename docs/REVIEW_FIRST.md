@@ -51,3 +51,26 @@ Built unattended in mock mode. No real Supabase, Meta, Slack, Google, Voyage or 
 - **Prompt caching**: the system prompt is short, below the model's minimum cacheable prefix, so caching probably only applies to large retrieved context.
 - **UI coverage**: server actions are covered by Playwright smoke runs, not unit tests. Realtime inbox refresh is untested.
 - **Graph**: `/graphify .` ran once in full (docs plus code) after M1. Later milestones used `graphify update .` (code only, free); docs changed since M1 aren't re-extracted.
+
+# Review first: M10–M13 (added after the review-and-fix session)
+
+Same mock-only conditions: no real Razorpay, Meta, Slack, Google, Anthropic, Voyage or Supabase call was made.
+
+1. **Razorpay webhook state machine**: `lib/billing/razorpay.ts:78` (charged at :98).
+   - Subscriptions are matched by our stored id only, and dedupe shares a transaction with the state change.
+   - `halted` suspends the tenant; `charged` marks the oldest unpaid invoice paid.
+   - The payload shapes and the `x-razorpay-event-id` header come from memory: check them in Razorpay test mode.
+2. **Invoice math and timing**: `lib/billing/invoices.ts:24` and `:44`.
+   - GST 18% is charged on every line, including Meta pass-through.
+   - The plan is charged by the subscription; overage and Meta fees go on the next renewal as an add-on.
+   - If the add-on call fails, it is only logged. **Accountant review required.**
+3. **Plan amounts**: `lib/billing/razorpay.ts:39`. We store GST-exclusive prices from `rates`, but the Razorpay plan must be configured GST-inclusive. A mismatch means the charged amount and the invoice disagree.
+4. **Admin authorization**: `lib/auth.ts:43` (`requireAdmin`) and `lib/admin.ts:9` (`assertPlatformAdmin`, re-checked inside every console query and mutation). All console reads use the service role, so these checks are the boundary.
+5. **Tenant economics**: `lib/admin.ts:28`. Revenue = active subscription price + Meta fees recovered; cost = AI + Meta. Everything is an estimate from the rates table until reconciled against real bills.
+6. **Rates editor**: `lib/admin.ts:178`. It is append-only and the newest `effective_from` wins, so a wrong future-dated rate silently re-prices everything from that date.
+7. **Pilot expiry**: `lib/billing/lifecycle.ts:8`. It runs hourly, suspends AI for unpaid pilots past their end, and emails the missed-leads report once.
+8. **Mock checkout**: `app/(app)/billing/mock-checkout/page.tsx:10`. It is a GET that activates a subscription and is gated by `mockAuthAllowed()` (mock mode and localhost only). It must never be reachable in production; the startup check guarantees that.
+9. **Spend alerts**: `lib/alerts.ts:34`. Each alert is claimed in audit_log before sending, so at most one per day per kind. If SMTP fails, the claim is released and it retries in 15 minutes.
+10. **Error redaction**: `lib/monitoring.ts:11`. It is pattern-based. A secret format it doesn't know (for example a Voyage key) would still be logged if it appears in an error message.
+
+Also new: the unknown-send sweep (`lib/channels/test-connection.ts:46`) and "Test connection" (`:19`).

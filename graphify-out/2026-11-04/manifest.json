@@ -96,9 +96,9 @@
     "semantic_hash": "ab9afbe7b7a4f39924b0e78208cb22a0"
   },
   "lib/env.ts": {
-    "mtime": 1793823478.102097,
-    "seen": 1793823804.8488247,
-    "ast_hash": "d89411cd6f0152842e4c0eee5ad8c5b2",
+    "mtime": 1793824935.0645366,
+    "seen": 1793825295.1700032,
+    "ast_hash": "83c50490251673d5d07ccb4de00a312f",
     "semantic_hash": ""
   },
   "lib/supabase/server.ts": {
@@ -162,9 +162,9 @@
     "semantic_hash": "08fe2959e48c56107642fb63760bd5a7"
   },
   "supabase/seed.sql": {
-    "mtime": 1793823478.102779,
-    "seen": 1793823804.8488674,
-    "ast_hash": "4ed2672be1f7504acc2e3f72e31b5827",
+    "mtime": 1793824889.2163956,
+    "seen": 1793825295.170106,
+    "ast_hash": "1c0a796dd5e6e6b54a35b9ab5fd3de35",
     "semantic_hash": ""
   },
   "test/ids.ts": {
@@ -180,9 +180,9 @@
     "semantic_hash": "196114120d4479962c822f252098bc73"
   },
   "vitest.config.ts": {
-    "mtime": 1793823990.0207744,
-    "seen": 1793824184.3243768,
-    "ast_hash": "60fc064bdd2ff74b9b6b1b0f47004bc9",
+    "mtime": 1793824935.0771334,
+    "seen": 1793825295.1701336,
+    "ast_hash": "0a0bef2824492e263753cdbda5c816a1",
     "semantic_hash": ""
   },
   ".claude/skills/ponytail/SKILL.md": {
@@ -258,9 +258,9 @@
     "semantic_hash": ""
   },
   "docs/HANDOFF.md": {
-    "mtime": 1793824832.476397,
-    "seen": 1793824834.9733899,
-    "ast_hash": "561ef0df9f187a683e55840a688afdc6",
+    "mtime": 1793825292.5083866,
+    "seen": 1793825295.1701481,
+    "ast_hash": "ad47cc86bea9eae1f8f002c66374e568",
     "semantic_hash": ""
   },
   "app/(app)/documents/page.tsx": {
@@ -300,9 +300,9 @@
     "semantic_hash": ""
   },
   "inngest/functions.ts": {
-    "mtime": 1793824714.2151015,
-    "seen": 1793824834.9730752,
-    "ast_hash": "ae10fdeab4e5a642290ace50e52f307d",
+    "mtime": 1793824976.1223798,
+    "seen": 1793825295.1699462,
+    "ast_hash": "7fd338bdb3b37b82e08f87d6a7113afb",
     "semantic_hash": ""
   },
   "lib/ai/ai.test.ts": {
@@ -354,9 +354,9 @@
     "semantic_hash": ""
   },
   "lib/ai/pipeline.ts": {
-    "mtime": 1793823990.0198665,
-    "seen": 1793824184.3241525,
-    "ast_hash": "a729c6f0d12f7997687625954f075239",
+    "mtime": 1793824976.1217682,
+    "seen": 1793825295.1699634,
+    "ast_hash": "6d2aec72449340406cea0e95c9912851",
     "semantic_hash": ""
   },
   "lib/ai/retrieve.ts": {
@@ -594,9 +594,9 @@
     "semantic_hash": ""
   },
   "app/(app)/settings/page.tsx": {
-    "mtime": 1793822207.0352128,
-    "seen": 1793822251.8981602,
-    "ast_hash": "8fb5b203e1cee3ab40271fcbd8879a8a",
+    "mtime": 1793825013.220393,
+    "seen": 1793825295.169901,
+    "ast_hash": "49b1d51483ba7bc255e3d14f7d68a459",
     "semantic_hash": ""
   },
   "app/actions/tenant.ts": {
@@ -744,9 +744,9 @@
     "semantic_hash": ""
   },
   "lib/alerts.ts": {
-    "mtime": 1793824553.7828255,
-    "seen": 1793824834.9731107,
-    "ast_hash": "66c172b73e1e41f62a09d95cb5120e3f",
+    "mtime": 1793824889.2403417,
+    "seen": 1793825295.1699657,
+    "ast_hash": "6f4f0e3249adf7bc8d9d9887d71693b2",
     "semantic_hash": ""
   },
   "lib/channels/whatsapp-connect.ts": {
@@ -759,6 +759,66 @@
     "mtime": 1793824491.4884048,
     "seen": 1793824834.973349,
     "ast_hash": "3979774fc604a268dd1c647dded72c07",
+    "semantic_hash": ""
+  },
+  "app/(app)/billing/mock-checkout/page.tsx": {
+    "mtime": 1793825250.054717,
+    "seen": 1793825295.1698766,
+    "ast_hash": "9b26dccfc65df21abd5015b9aaa98267",
+    "semantic_hash": ""
+  },
+  "app/(app)/invoices/[id]/page.tsx": {
+    "mtime": 1793825013.2283928,
+    "seen": 1793825295.169887,
+    "ast_hash": "beaeb5df3107c6553063726a6f721bad",
+    "semantic_hash": ""
+  },
+  "app/actions/billing.ts": {
+    "mtime": 1793825013.1963928,
+    "seen": 1793825295.1699064,
+    "ast_hash": "f239b8d5e3a6360a11414e0177f3f8a3",
+    "semantic_hash": ""
+  },
+  "app/api/webhooks/razorpay/route.ts": {
+    "mtime": 1793824935.0829544,
+    "seen": 1793825295.169932,
+    "ast_hash": "9b07a08b2281baaf6f904abaf38fa84b",
+    "semantic_hash": ""
+  },
+  "lib/billing/billing.test.ts": {
+    "mtime": 1793825053.1204815,
+    "seen": 1793825295.1699684,
+    "ast_hash": "dff0abe886759fbdea5e5011484b1554",
+    "semantic_hash": ""
+  },
+  "lib/billing/invoices.ts": {
+    "mtime": 1793825013.1885858,
+    "seen": 1793825295.1699696,
+    "ast_hash": "931a6156a4bb604c86f8780aad66db60",
+    "semantic_hash": ""
+  },
+  "lib/billing/lifecycle.ts": {
+    "mtime": 1793824976.1037283,
+    "seen": 1793825295.169971,
+    "ast_hash": "ad3f871479939c90d15cba07f4399be2",
+    "semantic_hash": ""
+  },
+  "lib/billing/razorpay.ts": {
+    "mtime": 1793825199.5583446,
+    "seen": 1793825295.1699722,
+    "ast_hash": "d6aa22af438d4e0ce1196867f35b21e0",
+    "semantic_hash": ""
+  },
+  "lib/mailer.ts": {
+    "mtime": 1793824889.2211027,
+    "seen": 1793825295.170007,
+    "ast_hash": "f2cb240423bb548cdce228e6d74dfb7d",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/0009_billing.sql": {
+    "mtime": 1793824889.2158272,
+    "seen": 1793825295.170103,
+    "ast_hash": "673fb0a515e1ea5023d0a78d37a834e4",
     "semantic_hash": ""
   },
   "package-lock.json": {

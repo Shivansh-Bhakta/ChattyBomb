@@ -102,3 +102,14 @@ export async function connectWhatsApp(form: FormData) {
   revalidatePath("/settings/channels");
   redirect(ok ? "/settings/channels?connected=whatsapp" : "/settings/channels?error=whatsapp_failed");
 }
+
+/** "Test connection" on a channel of the caller's tenant (owner). */
+export async function testConnection(form: FormData) {
+  const me = await requireMember();
+  if (me.role !== "owner") throw new Error("only owners can test channels");
+  const channelId = z.guid().parse(form.get("channelId"));
+  const { testChannel } = await import("@/lib/channels/test-connection");
+  const r = await testChannel(me.tenantId, channelId, { id: me.id, type: "user" });
+  revalidatePath("/settings/channels");
+  redirect(r.ok ? "/settings/channels?connected=test_ok" : "/settings/channels?error=test_failed");
+}

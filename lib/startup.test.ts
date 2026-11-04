@@ -40,6 +40,7 @@ describe("production configuration check", () => {
     ENCRYPTION_KEY: Buffer.alloc(32, 7).toString("base64"),
     EMBEDDING_DIM: "1024", EMBEDDING_MODEL: "voyage-3.5-lite",
     NEXT_PUBLIC_SUPABASE_URL: "https://abc.supabase.co", ...SECRET_VALUES,
+    INNGEST_SIGNING_KEY: "signkey-prod-abcdef0123456789", INNGEST_EVENT_KEY: "event-key-0123456789",
   };
 
   it("passes with a complete, well-formed production config", () => {
@@ -48,7 +49,7 @@ describe("production configuration check", () => {
 
   it("fails loudly on missing settings, listing every name", () => {
     const problems = startupProblems({ NODE_ENV: "production", MOCK_MODE: "false" });
-    for (const name of ["DATABASE_URL", "ENCRYPTION_KEY", "EMBEDDING_DIM", "EMBEDDING_MODEL", "NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY", "ANTHROPIC_API_KEY", "VOYAGE_API_KEY"]) {
+    for (const name of ["DATABASE_URL", "ENCRYPTION_KEY", "EMBEDDING_DIM", "EMBEDDING_MODEL", "NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY", "ANTHROPIC_API_KEY", "VOYAGE_API_KEY", "INNGEST_SIGNING_KEY", "INNGEST_EVENT_KEY"]) {
       expect(problems).toContain(`${name} is missing`);
     }
     expect(() => assertStartup({ NODE_ENV: "production" })).toThrow(/Refusing to start/);

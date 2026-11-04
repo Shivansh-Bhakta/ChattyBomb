@@ -83,3 +83,9 @@
 - Run: `npm test` (lib/pilot-report.test.ts); app: open `/signup?ref=landing`.
 - Manual: point the landing page's "Start free pilot" button (chattybong.vercel.app, separate site) at `{APP_URL}/signup?ref=landing`.
 - Skipped/unchecked: one business-hours window for all tenants; the landing page itself was not edited (not in this repo).
+
+## M13: hardening
+- Done: error monitoring (`onRequestError` → redacted JSON log line + optional `ERROR_WEBHOOK_URL`), `/api/health` for uptime checks, security headers, Inngest keys in the production startup check, "Test connection" + status chips for every channel (WhatsApp, Slack, email), 15-min sweep that hands unknown-outcome sends to a human, README with setup for Supabase, Inngest, Meta, Slack, Google, Razorpay, landing page, plus deployment and before-real-customers checklists. Signature checks, rate limits and idempotency tests were already in place (review-fix session); Razorpay added in M11.
+- Run: `npm test` (109 passing), `npm run build`, `npm run eval` (18/20 mock).
+- Skipped/unchecked: no CSP header (Next inline scripts need nonces); no managed error tracker (Sentry) chosen; WhatsApp Embedded Signup not built; nothing exercised against real services.
+- Next: work through README "Deployment checklist" and "Before real customers"; read docs/REVIEW_FIRST.md (M10–M13 section).

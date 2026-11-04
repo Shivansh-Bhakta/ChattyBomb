@@ -73,7 +73,7 @@ Details: `docs/ARCHITECTURE.md`. Schema: `docs/DATA_MODEL.md`.
 - DB access: `asUser(userId, fn)` (RLS applies) or `asService(fn)` (bypasses RLS) in `lib/db.ts`.
 
 ## Milestones
-M0 plan/docs ✅ approved · M1–M9 ✅ (see docs/HANDOFF.md) · M1 scaffold+auth+RLS · M2 cost ledger · M3 inbox UI · M4 WhatsApp ·
+M0 plan/docs ✅ approved · M1–M13 ✅ (see docs/HANDOFF.md, README.md) · M1 scaffold+auth+RLS · M2 cost ledger · M3 inbox UI · M4 WhatsApp ·
 M5 RAG+AI · M6 Slack · M7 Email · M8 leads/reminders · M9 usage/audit/deletion ·
 M10 admin console · M11 Razorpay/GST · M12 pilot report · M13 hardening.
 
