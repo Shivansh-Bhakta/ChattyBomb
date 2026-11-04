@@ -3,7 +3,7 @@
 ## Components
 ```
  WhatsApp Cloud API ─┐                         ┌─ Anthropic (classify: small model, answer: large model)
- Slack Events API ───┤  Next.js on Vercel      ├─ Voyage (embeddings)
+ Slack Events API ───┤  Next.js on Vercel      ├─ Voyage (embeddings, model = EMBEDDING_MODEL)
  Gmail Pub/Sub/IMAP ─┼─▶ app/api/webhooks/* ──▶│  Inngest (jobs, schedules, retries)
  Razorpay ───────────┘   app/(app)/*  inbox    ├─ Supabase: Postgres+RLS, Auth, Realtime,
                          app/admin/*  console  │           Storage, pgvector
