@@ -20,6 +20,10 @@ const schema = z
     WHATSAPP_APP_SECRET: z.string().optional(),
     WHATSAPP_VERIFY_TOKEN: z.string().optional(),
     WHATSAPP_GRAPH_VERSION: z.string().default("v23.0"),
+    APP_URL: z.string().url().default("http://localhost:3000"),
+    SLACK_SIGNING_SECRET: z.string().optional(),
+    SLACK_CLIENT_ID: z.string().optional(),
+    SLACK_CLIENT_SECRET: z.string().optional(),
   })
   .superRefine((e, ctx) => {
     if (e.MOCK_MODE) return;
@@ -44,7 +48,7 @@ export function env(): Env {
 export const mockAuthAllowed = () => env().MOCK_MODE && env().NODE_ENV !== "production";
 
 /** Fetches a secret by name only when a real call needs it. */
-export function secret(name: "ANTHROPIC_API_KEY" | "VOYAGE_API_KEY" | "SUPABASE_SERVICE_ROLE_KEY" | "WHATSAPP_APP_SECRET" | "WHATSAPP_VERIFY_TOKEN"): string {
+export function secret(name: "ANTHROPIC_API_KEY" | "VOYAGE_API_KEY" | "SUPABASE_SERVICE_ROLE_KEY" | "SLACK_SIGNING_SECRET" | "SLACK_CLIENT_ID" | "SLACK_CLIENT_SECRET" | "WHATSAPP_APP_SECRET" | "WHATSAPP_VERIFY_TOKEN"): string {
   const v = env()[name];
   if (!v) throw new Error(`${name} is not set`);
   return v;
