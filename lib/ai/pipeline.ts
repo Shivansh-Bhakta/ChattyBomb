@@ -20,6 +20,10 @@ export async function processInbound({ tenantId, messageId }: { tenantId: string
     const { rows: [m] } = await db.query(
       `select m.id, m.body, m.created_at, m.conversation_id, c.status, c.ai_paused, ch.type as channel,
               t.status as tenant_status, t.conversation_limit, t.overage_policy,
+              (select count(*)::int from messages o join conversations oc on oc.id = o.conversation_id
+                where oc.tenant_id = m.tenant_id and oc.contact_id = c.contact_id and oc.channel_id = c.channel_id
+                  and o.direction = 'outbound' and o.sender_type = 'ai' and o.status <> 'failed'
+                  and o.created_at > now() - interval '1 day') as ai_replies_24h,
               exists (select 1 from messages o where o.conversation_id = m.conversation_id and o.direction = 'outbound' and o.status <> 'failed' and o.created_at >= m.created_at and o.idempotency_key is distinct from 'ai-reply:' || m.id::text) as already_replied
          from messages m join conversations c on c.id = m.conversation_id join channels ch on ch.id = c.channel_id join tenants t on t.id = m.tenant_id
         where m.id = $1 and m.tenant_id = $2 and m.direction = 'inbound'`,
@@ -40,6 +44,10 @@ export async function processInbound({ tenantId, messageId }: { tenantId: string
   if (ctx.skip) return { outcome: "skipped", reason: ctx.skip };
   const { m, transcript } = ctx;
   const base = { tenantId, conversationId: m.conversation_id as string, channel: m.channel as Channel };
+  // Email loop guard: a sender (e.g. an auto-responder we couldn't detect) gets at most N AI replies a day.
+  if (m.channel === "email" && m.ai_replies_24h >= env().AI_EMAIL_DAILY_REPLY_CAP) {
+    return handoff(base, m.id, "email_daily_cap", `AI reply limit (${env().AI_EMAIL_DAILY_REPLY_CAP}/day) reached for this sender; possible auto-reply loop. Last message: "${String(m.body).slice(0, 200)}"`);
+  }
   const meter = (db: Db, u: Usage) => (u ? recordAnthropicUsage(db, base, u.model, u.usage) : Promise.resolve());
 
   const c = await classify(transcript);

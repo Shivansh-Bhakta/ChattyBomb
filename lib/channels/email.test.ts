@@ -75,3 +75,24 @@ describe("email channel end to end (mock mailbox)", () => {
     expect(await q(`select 1 from messages where email_message_id in ('<m1@example.com>', '<m2@example.com>')`)).toHaveLength(2);
   });
 });
+
+describe("email loop guards", () => {
+  it("never accepts mail from no-reply, bounce or postmaster senders", async () => {
+    for (const from of ["noreply@shop.com", "no-reply@shop.com", "No-Reply+abc@shop.com", "donotreply@bank.in", "do-not-reply@x.com", "MAILER-DAEMON@mx.google.com", "postmaster@x.com", "Bounce <mailer-daemon@x.com>"]) {
+      expect(await parseEmail(raw({ id: `<${from}@t>`, from, body: "hi" }), ADDR), from).toBeNull();
+    }
+    expect(await parseEmail(raw({ id: "<ok@t>", from: "noreplyhelp-desk@x.com", body: "hi" }), ADDR)).not.toBeNull(); // only exact machine names
+  });
+
+  it("caps AI replies per sender per day, then hands the thread to a human", async () => {
+    const [ch] = await q(`select id from channels where external_id = $1`, [ADDR]);
+    const sender = "loop@autoresponder.test";
+    for (let i = 0; i < 7; i++) {
+      mockInbox.set(ADDR, [raw({ id: `<loop${i}@t>`, from: sender, subject: "CBC test price", body: "What is the price of a CBC test?" })]);
+      await pollEmail(ch.id);
+    }
+    expect(mockOutbox.filter((o) => o.target.to === sender)).toHaveLength(5); // default AI_EMAIL_DAILY_REPLY_CAP
+    const handoffs = await q(`select a.metadata->>'reason' as reason from audit_log a where a.action = 'ai.handoff' and a.metadata->>'reason' = 'email_daily_cap'`);
+    expect(handoffs.length).toBeGreaterThanOrEqual(1);
+  });
+});
