@@ -18,6 +18,10 @@ export const imapCreds = z.object({
 
 const ids = (v: string | string[] | undefined) => (Array.isArray(v) ? v : v ? v.split(/\s+/) : []).map((x) => x.trim()).filter(Boolean);
 
+/** Machine senders we never answer (bounces, notifications). */
+export const isMachineSender = (address: string) =>
+  /^(no-?reply|do-?not-?reply|mailer-daemon|postmaster)([+._-].*)?@/i.test(address);
+
 /** Removes quoted history so the AI and inbox see only the new text. */
 export function stripQuoted(text: string) {
   const cut = text.search(/^(On .{3,200}wrote:|-----Original Message-----|From: .+\nSent: )/m);
@@ -34,7 +38,7 @@ export async function parseEmail(raw: string | Buffer, channelAddress: string): 
   const from = m.from?.value[0];
   const address = from?.address?.toLowerCase();
   const messageId = m.messageId;
-  if (!address || !messageId || address === channelAddress.toLowerCase()) return null;
+  if (!address || !messageId || address === channelAddress.toLowerCase() || isMachineSender(address)) return null;
   const h = (k: string) => String(m.headers.get(k) ?? "").toLowerCase();
   if ((h("auto-submitted") && h("auto-submitted") !== "no") || /bulk|junk|list|auto_reply/.test(h("precedence")) || m.headers.has("list") || m.headers.has("list-id") || m.headers.has("x-autoreply")) return null;
   const refs = ids(m.references), inReplyTo = ids(m.inReplyTo)[0];

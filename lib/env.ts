@@ -14,6 +14,7 @@ const schema = z
     AI_ANSWER_MODEL: z.string().default("claude-opus-5-5"),
     AI_MIN_RETRIEVAL_SCORE: z.coerce.number().min(0).max(1).optional(),
     AI_MIN_CONFIDENCE: z.coerce.number().min(0).max(1).default(0.6),
+    AI_EMAIL_DAILY_REPLY_CAP: z.coerce.number().int().min(0).max(1000).default(5),
     SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
     VOYAGE_API_KEY: z.string().optional(),
     EMBEDDING_MODEL: z.string().default("voyage-3.5-lite"),
