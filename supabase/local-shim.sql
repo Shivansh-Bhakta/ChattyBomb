@@ -13,3 +13,5 @@ create function auth.uid() returns uuid language sql stable as $$
 $$;
 grant usage on schema auth to authenticated, anon;
 grant execute on function auth.uid() to authenticated, anon;
+drop publication if exists supabase_realtime;
+create publication supabase_realtime;
