@@ -14,11 +14,20 @@ type Sender = { type: "agent"; userId: string } | { type: "ai" } | { type: "syst
 /** shortcut: country from +91 prefix only (all pilots are Indian), map more prefixes when expanding. */
 const countryOf = (phone: string | null) => (phone?.startsWith("+91") ? "IN" : "OTHER");
 
+/** Provider call timed out or was aborted: it may still have been delivered. */
+const ambiguous = (e: unknown) => e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError");
+
+export type SendResult = { messageId: string; providerMessageId: string | null; duplicate?: true };
+
 /**
  * Sends one message on the conversation's channel, enforcing the WhatsApp 24h rule,
  * storing it, and metering it. tenantId is always checked against the conversation.
+ *
+ * Exactly-once on retries: the row is recorded as 'sending' before the provider call. With an
+ * idempotencyKey, a retry finds that row and only re-sends when it is 'queued' or 'failed';
+ * 'sent' and 'sending' (provider may have delivered; DB update was lost) are never re-sent.
  */
-export async function sendMessage(tenantId: string, conversationId: string, msg: OutboundMessage, sender: Sender) {
+export async function sendMessage(tenantId: string, conversationId: string, msg: OutboundMessage, sender: Sender, opts: { idempotencyKey?: string } = {}): Promise<SendResult> {
   const ctx = await asService(async (db) => { // scope: tenant
     const { rows: [c] } = await db.query(
       `select c.id, c.last_inbound_at, c.external_thread_id, ch.type, ch.external_id, ch.config, ch.credentials_encrypted, ch.status as channel_status,
@@ -32,21 +41,43 @@ export async function sendMessage(tenantId: string, conversationId: string, msg:
     const adapter = adapterFor(c.type);
     if (msg.kind === "text" && !adapter.canSendFreeform(c)) throw new WindowClosedError();
     const body = msg.kind === "text" ? msg.text : `[template ${msg.name}] ${(msg.params ?? []).join(" | ")}`;
-    const { rows: [m] } = await db.query(
-      `insert into messages (tenant_id, conversation_id, direction, sender_type, sender_user_id, body, status, is_template, template_name)
-       values ($1, $2, 'outbound', $3, $4, $5, 'queued', $6, $7) returning id`,
-      [tenantId, conversationId, sender.type, sender.type === "agent" ? sender.userId : null, body, msg.kind === "template", msg.kind === "template" ? msg.name : null],
+    const key = opts.idempotencyKey ?? null;
+    const { rows: [fresh] } = await db.query(
+      `insert into messages (tenant_id, conversation_id, direction, sender_type, sender_user_id, body, status, is_template, template_name, idempotency_key)
+       values ($1, $2, 'outbound', $3, $4, $5, 'sending', $6, $7, $8)
+       on conflict (tenant_id, idempotency_key) where idempotency_key is not null do nothing returning id`,
+      [tenantId, conversationId, sender.type, sender.type === "agent" ? sender.userId : null, body, msg.kind === "template", msg.kind === "template" ? msg.name : null, key],
     );
-    return { c, adapter, messageId: m.id as string };
+    if (fresh) return { c, adapter, messageId: fresh.id as string, done: null };
+    // Same key seen before: lock it so concurrent retries serialise, then decide from its state.
+    const { rows: [prev] } = await db.query(
+      `select id, status, provider_message_id from messages where tenant_id = $1 and idempotency_key = $2 and conversation_id = $3 for update`, [tenantId, key, conversationId]);
+    if (!prev) throw new Error("idempotency key already used for another conversation");
+    if (prev.status !== "queued" && prev.status !== "failed") {
+      if (prev.status === "sending") console.error(`[outbound] not re-sending message ${prev.id}: outcome of an earlier attempt is unknown`);
+      return { c, adapter, messageId: prev.id as string, done: { messageId: prev.id as string, providerMessageId: prev.provider_message_id as string | null, duplicate: true as const } };
+    }
+    await db.query(`update messages set status = 'sending', error = null where id = $1 and tenant_id = $2`, [prev.id, tenantId]);
+    return { c, adapter, messageId: prev.id as string, done: null };
   });
+  if (ctx.done) return ctx.done;
 
   const { c, adapter, messageId } = ctx;
+  let providerMessageId: string;
   try {
-    const { providerMessageId } = await adapter.send(
+    ({ providerMessageId } = await adapter.send(
       { channelExternalId: c.external_id, credentials: env().MOCK_MODE || !c.credentials_encrypted ? null : decrypt(c.credentials_encrypted),
         to: (c.type === "email" ? c.email : c.type === "whatsapp" ? c.phone : null) ?? c.external_thread_id, threadId: c.external_thread_id, config: c.config },
       msg,
-    );
+    ));
+  } catch (e) {
+    // A definite provider failure may be retried; an ambiguous one stays 'sending' (never re-sent automatically).
+    const status = ambiguous(e) ? "sending" : "failed";
+    await asService((db) => db.query(`update messages set status = $4, error = $2 where id = $1 and tenant_id = $3`, // scope: tenant
+      [messageId, (ambiguous(e) ? "outcome unknown: " : "") + (e as Error).message.slice(0, 480), tenantId, status]));
+    throw e;
+  }
+  try {
     await asService(async (db) => { // scope: tenant
       await db.query(`update messages set status = 'sent', provider_message_id = $2 where id = $1 and tenant_id = $3`, [messageId, providerMessageId, tenantId]);
       await db.query(`update conversations set last_message_at = now() where id = $1 and tenant_id = $2`, [conversationId, tenantId]);
@@ -60,9 +91,10 @@ export async function sendMessage(tenantId: string, conversationId: string, msg:
         });
       }
     });
-    return { messageId, providerMessageId };
   } catch (e) {
-    await asService((db) => db.query(`update messages set status = 'failed', error = $2 where id = $1 and tenant_id = $3`, [messageId, (e as Error).message.slice(0, 500), tenantId])); // scope: tenant
+    // Delivered but not recorded: the row stays 'sending' so no retry re-sends it. Needs reconciliation (and metering).
+    console.error(`[outbound] message ${messageId} was delivered (${providerMessageId}) but recording it failed: ${(e as Error).message}`);
     throw e;
   }
+  return { messageId, providerMessageId };
 }

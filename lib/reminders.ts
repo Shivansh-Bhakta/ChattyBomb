@@ -45,12 +45,12 @@ export async function sendDueReminders(limit = 100) {
       if (!r.conversation_id) throw new Error("reminder has no conversation");
       try {
         if (!r.message) throw new WindowClosedError();
-        await sendMessage(r.tenant_id, r.conversation_id, { kind: "text", text: r.message }, { type: "system" });
+        await sendMessage(r.tenant_id, r.conversation_id, { kind: "text", text: r.message }, { type: "system" }, { idempotencyKey: `reminder:${r.id}` });
       } catch (e) {
         if (!(e instanceof WindowClosedError)) throw e;
         const t = templatesOf(r.channel_config).find((x) => x.name === r.template_name);
         if (!t) throw new Error("24-hour window closed and no approved template set");
-        await sendMessage(r.tenant_id, r.conversation_id, { kind: "template", ...t, params: [r.contact_name || "there"] }, { type: "system" });
+        await sendMessage(r.tenant_id, r.conversation_id, { kind: "template", ...t, params: [r.contact_name || "there"] }, { type: "system" }, { idempotencyKey: `reminder:${r.id}` });
       }
       sent++;
     } catch (e) {
