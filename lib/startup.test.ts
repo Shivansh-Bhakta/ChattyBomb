@@ -15,7 +15,9 @@ describe("startup refusal for mock login", () => {
 
   it("allows mock mode on localhost in development", () => {
     expect(startupProblems({ MOCK_MODE: "true", NODE_ENV: "development", APP_URL: "http://localhost:3100" })).toEqual([]);
-    expect(startupProblems({ MOCK_MODE: "true", NODE_ENV: "test" })).toEqual([]); // APP_URL defaults to localhost
+    expect(startupProblems({ MOCK_MODE: "true", NODE_ENV: "test", APP_URL: "http://127.0.0.1:3000" })).toEqual([]);
+    // Unset APP_URL is not assumed to be local (Docker/VM hosts running next dev).
+    expect(startupProblems({ MOCK_MODE: "true", NODE_ENV: "development" })).toHaveLength(1);
   });
 
   it("mock login itself is off when APP_URL is not local", async () => {

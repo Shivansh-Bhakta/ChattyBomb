@@ -2,7 +2,7 @@ const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
 
 const hostOf = (url: string | undefined) => {
   try {
-    return new URL(url ?? "http://localhost:3000").hostname;
+    return new URL(url ?? "").hostname; // APP_URL must be set explicitly: no "assume localhost" default
   } catch {
     return "";
   }
@@ -18,7 +18,7 @@ export function startupProblems(e: Record<string, string | undefined>): string[]
   const problems: string[] = [];
   const mock = e.MOCK_MODE === "true";
   if (mock && e.NODE_ENV === "production") problems.push("MOCK_MODE=true is not allowed when NODE_ENV=production (mock login would be open)");
-  if (mock && !isLocalDeployment(e)) problems.push("MOCK_MODE=true is only allowed on localhost (APP_URL must be http://localhost or 127.0.0.1, and not on Vercel)");
+  if (mock && !isLocalDeployment(e)) problems.push("MOCK_MODE=true is only allowed on localhost (APP_URL must be set to http://localhost or 127.0.0.1, and not on Vercel)");
   // The chunks.embedding column is vector(1024); any other dimension breaks every insert.
   if (e.EMBEDDING_DIM !== undefined && e.EMBEDDING_DIM !== String(EMBEDDING_COLUMN_DIM)) problems.push(`EMBEDDING_DIM must be ${EMBEDDING_COLUMN_DIM} to match the chunks.embedding column`);
   if (e.NODE_ENV === "production") problems.push(...productionProblems(e));

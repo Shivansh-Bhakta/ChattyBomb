@@ -3,7 +3,7 @@ import { asService } from "../db.ts";
 import { env } from "../env.ts";
 import { record } from "../metering.ts";
 import { adapterFor } from "./index.ts";
-import type { OutboundMessage } from "./types.ts";
+import { ProviderRejectedError, type OutboundMessage } from "./types.ts";
 
 export class WindowClosedError extends Error {
   constructor() { super("24-hour window closed: only approved template messages can be sent"); }
@@ -14,8 +14,6 @@ type Sender = { type: "agent"; userId: string } | { type: "ai" } | { type: "syst
 /** shortcut: country from +91 prefix only (all pilots are Indian), map more prefixes when expanding. */
 const countryOf = (phone: string | null) => (phone?.startsWith("+91") ? "IN" : "OTHER");
 
-/** Provider call timed out or was aborted: it may still have been delivered. */
-const ambiguous = (e: unknown) => e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError");
 
 export type SendResult = { messageId: string; providerMessageId: string | null; duplicate?: true };
 
@@ -24,8 +22,8 @@ export type SendResult = { messageId: string; providerMessageId: string | null; 
  * storing it, and metering it. tenantId is always checked against the conversation.
  *
  * Exactly-once on retries: the row is recorded as 'sending' before the provider call. With an
- * idempotencyKey, a retry finds that row and only re-sends when it is 'queued' or 'failed';
- * 'sent' and 'sending' (provider may have delivered; DB update was lost) are never re-sent.
+ * idempotencyKey, a retry finds that row and only re-sends when it is 'queued' or 'failed' (a definite
+ * provider rejection); 'sent' and 'sending' (may have been delivered) are never re-sent.
  */
 export async function sendMessage(tenantId: string, conversationId: string, msg: OutboundMessage, sender: Sender, opts: { idempotencyKey?: string } = {}): Promise<SendResult> {
   const ctx = await asService(async (db) => { // scope: tenant
@@ -57,7 +55,9 @@ export async function sendMessage(tenantId: string, conversationId: string, msg:
       if (prev.status === "sending") console.error(`[outbound] not re-sending message ${prev.id}: outcome of an earlier attempt is unknown`);
       return { c, adapter, messageId: prev.id as string, done: { messageId: prev.id as string, providerMessageId: prev.provider_message_id as string | null, duplicate: true as const } };
     }
-    await db.query(`update messages set status = 'sending', error = null where id = $1 and tenant_id = $2`, [prev.id, tenantId]);
+    // The retry may carry different content (e.g. a regenerated AI answer): record what is actually sent.
+    await db.query(`update messages set status = 'sending', error = null, body = $3, is_template = $4, template_name = $5 where id = $1 and tenant_id = $2`,
+      [prev.id, tenantId, body, msg.kind === "template", msg.kind === "template" ? msg.name : null]);
     return { c, adapter, messageId: prev.id as string, done: null };
   });
   if (ctx.done) return ctx.done;
@@ -65,16 +65,24 @@ export async function sendMessage(tenantId: string, conversationId: string, msg:
   const { c, adapter, messageId } = ctx;
   let providerMessageId: string;
   try {
+    // Decrypting happens before any network call, so its failure is a definite non-send.
+    let credentials: string | null;
+    try {
+      credentials = env().MOCK_MODE || !c.credentials_encrypted ? null : decrypt(c.credentials_encrypted);
+    } catch (e) {
+      throw new ProviderRejectedError(`cannot decrypt channel credentials: ${(e as Error).message}`);
+    }
     ({ providerMessageId } = await adapter.send(
-      { channelExternalId: c.external_id, credentials: env().MOCK_MODE || !c.credentials_encrypted ? null : decrypt(c.credentials_encrypted),
+      { channelExternalId: c.external_id, credentials,
         to: (c.type === "email" ? c.email : c.type === "whatsapp" ? c.phone : null) ?? c.external_thread_id, threadId: c.external_thread_id, config: c.config },
       msg,
     ));
   } catch (e) {
-    // A definite provider failure may be retried; an ambiguous one stays 'sending' (never re-sent automatically).
-    const status = ambiguous(e) ? "sending" : "failed";
+    // Only a definite rejection may be retried. Anything else (5xx, timeout, socket reset) may have been
+    // delivered, so the row stays 'sending' and is never re-sent automatically.
+    const definite = e instanceof ProviderRejectedError;
     await asService((db) => db.query(`update messages set status = $4, error = $2 where id = $1 and tenant_id = $3`, // scope: tenant
-      [messageId, (ambiguous(e) ? "outcome unknown: " : "") + (e as Error).message.slice(0, 480), tenantId, status]));
+      [messageId, (definite ? "" : "outcome unknown: ") + (e as Error).message.slice(0, 480), tenantId, definite ? "failed" : "sending"]));
     throw e;
   }
   try {
