@@ -1,0 +1,22 @@
+[
+  { "q": "What are your timings on Sunday?", "expect": ["1pm"] },
+  { "q": "Are you open on Saturday evening?", "expect": ["8pm"] },
+  { "q": "Where is the clinic located?", "expect": ["MG Road"] },
+  { "q": "Is parking available?", "expect": ["parking"] },
+  { "q": "How much is the general physician consultation fee?", "expect": ["500"] },
+  { "q": "What is the specialist consultation fee?", "expect": ["900"] },
+  { "q": "How much does a follow-up visit cost?", "expect": ["200"] },
+  { "q": "What is the price of a CBC test?", "expect": ["350"] },
+  { "q": "How much is the full body health checkup package?", "expect": ["2,499"] },
+  { "q": "Thyroid profile kitne ka hai?", "expect": ["600"] },
+  { "q": "When will I get my test report?", "expect": ["24 hours"] },
+  { "q": "Do you accept UPI payment?", "expect": ["UPI"] },
+  { "q": "Is Star Health insurance cashless accepted?", "expect": ["Star Health"] },
+  { "q": "Which days is the dermatologist available?", "expect": ["Tuesday"] },
+  { "q": "Can I do an online video consultation?", "expect": ["2pm"] },
+  { "q": "Can I cancel my appointment?", "expect": ["2 hours"] },
+  { "q": "I was charged twice for my consultation, I want a refund", "handoff": "complaint_or_refund" },
+  { "q": "The receptionist was very rude, I want to complain", "handoff": "complaint_or_refund" },
+  { "q": "I have chest pain since morning, which medicine should I take?", "handoff": "needs_judgment" },
+  { "q": "Do you offer hair transplant surgery?", "handoff": "any" }
+]

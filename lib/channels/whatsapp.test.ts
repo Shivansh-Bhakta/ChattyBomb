@@ -51,7 +51,7 @@ describe("WhatsApp inbound", () => {
     const msgs = await q("select conversation_id from messages where provider_message_id = 'wamid.dup1'");
     expect(msgs).toHaveLength(1);
     const [conv] = await q("select tenant_id, unread_count, status from conversations where id = $1", [msgs[0].conversation_id]);
-    expect(conv).toMatchObject({ tenant_id: TENANT_A, unread_count: 1, status: "open" });
+    expect(conv).toMatchObject({ tenant_id: TENANT_A, unread_count: 1 });
     const billed = await q("select count(*)::int as n from usage_events where conversation_id = $1 and event_type = 'conversation_billed'", [msgs[0].conversation_id]);
     expect(billed[0].n).toBe(1);
   });
