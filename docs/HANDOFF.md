@@ -49,3 +49,9 @@
 - Run: `npm test` (lib/reminders.test.ts); app: Settings → add `appointment_reminder,en,utility` → Inbox → Schedule a reminder.
 - Skipped/unchecked: template sync from Meta (list is typed by the owner), template params are only the contact name for reminders, no recurring reminders, at-most-once delivery (a crash mid-send drops that reminder; it shows as sent).
 - Next: M9 tenant usage page, plan limits, audit log, tenant data deletion.
+
+## M9: usage, plan limits, audit log, tenant deletion
+- Done: `/settings` shows plan, pilot end, conversations used vs limit (by channel) and overage policy; app-wide banner at ≥80% and when over (AI already pauses past the limit under `pause_ai`); owner-only `/settings/audit`; owner deletes the business by typing its exact name (`deleteTenant`: cascades every tenant table, removes stored files and logins, leaves one tenant-less `tenant.delete` audit row).
+- Run: `npm test` (lib/tenant-lifecycle.test.ts); app: log in as Anjali (Glow Salon) → Settings.
+- Skipped/unchecked: no email notification at 80%/100% (M10/M11 alerts), usage history for deleted tenants is gone (platform revenue reports lose it), Supabase Storage listing handles ≤1000 files per tenant, real Supabase Auth user deletion never exercised.
+- Next: M10 platform owner console and alerts. Review docs/REVIEW_FIRST.md first.

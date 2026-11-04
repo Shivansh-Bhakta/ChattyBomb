@@ -96,9 +96,9 @@
     "semantic_hash": "ab9afbe7b7a4f39924b0e78208cb22a0"
   },
   "lib/env.ts": {
-    "mtime": 1793821628.5821073,
-    "seen": 1793821729.8280406,
-    "ast_hash": "5239229e191f8523d15f92ee073674f5",
+    "mtime": 1793821811.3866484,
+    "seen": 1793821968.396833,
+    "ast_hash": "c3c8e9ae90627e1a8893a986fc5e2b20",
     "semantic_hash": ""
   },
   "lib/supabase/server.ts": {
@@ -126,9 +126,9 @@
     "semantic_hash": "58b8c3c8b3fd4247ccc30bf609d3950b"
   },
   "package.json": {
-    "mtime": 1793821260.7884786,
-    "seen": 1793821584.92746,
-    "ast_hash": "169f2baea6fbc2da3c110e0b48178ed2",
+    "mtime": 1793821781.3724668,
+    "seen": 1793821968.3968606,
+    "ast_hash": "008fd77357cc3b1dfb51eb2d7bbc0ab6",
     "semantic_hash": ""
   },
   "postcss.config.mjs": {
@@ -258,9 +258,9 @@
     "semantic_hash": ""
   },
   "docs/HANDOFF.md": {
-    "mtime": 1793821728.412468,
-    "seen": 1793821729.8281393,
-    "ast_hash": "6afdeaed40f0423e4db18c272539adde",
+    "mtime": 1793821966.8004625,
+    "seen": 1793821968.3969252,
+    "ast_hash": "21615db82102669bb2767b871c57e245",
     "semantic_hash": ""
   },
   "app/(app)/documents/page.tsx": {
@@ -300,9 +300,9 @@
     "semantic_hash": ""
   },
   "inngest/functions.ts": {
-    "mtime": 1793821341.7683022,
-    "seen": 1793821584.9274173,
-    "ast_hash": "d7bca09aee2b700f701ba2f78b92e8ec",
+    "mtime": 1793821891.2360857,
+    "seen": 1793821968.3967445,
+    "ast_hash": "8dcf595e872a79dd237a83ebd7738449",
     "semantic_hash": ""
   },
   "lib/ai/ai.test.ts": {
@@ -372,21 +372,21 @@
     "semantic_hash": ""
   },
   "lib/channels/index.ts": {
-    "mtime": 1793821628.6167195,
-    "seen": 1793821729.8279676,
-    "ast_hash": "3ffbf7aec49b56c0e86c9683f3064ae7",
+    "mtime": 1793821859.7617805,
+    "seen": 1793821968.3967938,
+    "ast_hash": "b53e0dde39dd44b10367909e32feea41",
     "semantic_hash": ""
   },
   "lib/channels/mock.ts": {
-    "mtime": 1793821087.1084826,
-    "seen": 1793821584.9274342,
-    "ast_hash": "d8dd20e18d9e8aa0c1b9bf9027ada094",
+    "mtime": 1793821811.3873396,
+    "seen": 1793821968.3967965,
+    "ast_hash": "642226a7b9b66e93351bdbbcb4789582",
     "semantic_hash": ""
   },
   "lib/channels/outbound.ts": {
-    "mtime": 1793821123.6876752,
-    "seen": 1793821584.9274352,
-    "ast_hash": "83279ae4462eddc7f329638a32db564a",
+    "mtime": 1793821859.7609468,
+    "seen": 1793821968.396801,
+    "ast_hash": "ef3431c10171bba0f068f93431304ca0",
     "semantic_hash": ""
   },
   "lib/channels/types.ts": {
@@ -450,27 +450,27 @@
     "semantic_hash": ""
   },
   "app/(app)/settings/channels/page.tsx": {
-    "mtime": 1793821673.7930133,
-    "seen": 1793821729.8278747,
-    "ast_hash": "8c8d0a04aa7d12419efc04076695b22f",
+    "mtime": 1793821891.2354763,
+    "seen": 1793821968.396683,
+    "ast_hash": "753ed18d93844c9468df9b9824c7159f",
     "semantic_hash": ""
   },
   "app/actions/channels.ts": {
-    "mtime": 1793821673.7884693,
-    "seen": 1793821729.8278816,
-    "ast_hash": "ce4625d0516d35920750f8a0fde96bd1",
+    "mtime": 1793821891.2170181,
+    "seen": 1793821968.3966916,
+    "ast_hash": "e1112dece4118cf6258a81262b92668c",
     "semantic_hash": ""
   },
   "app/api/slack/install/route.ts": {
-    "mtime": 1793821673.7836192,
-    "seen": 1793821729.827898,
-    "ast_hash": "49ef77ba608b55164ac0d3ca710534c3",
+    "mtime": 1793821859.7711556,
+    "seen": 1793821968.3967152,
+    "ast_hash": "098eb2baf9591cbad4bc7a11c1caf8e8",
     "semantic_hash": ""
   },
   "app/api/slack/oauth/route.ts": {
-    "mtime": 1793821673.7844694,
-    "seen": 1793821729.827901,
-    "ast_hash": "aa4d15e3c2beea90aa767822f2017063",
+    "mtime": 1793821859.786756,
+    "seen": 1793821968.3967183,
+    "ast_hash": "0021253eeacc3aac6c977cc130a3a5d8",
     "semantic_hash": ""
   },
   "app/api/webhooks/slack/route.ts": {
@@ -497,10 +497,58 @@
     "ast_hash": "9b769aeaace2a0744b108586e47b0e9b",
     "semantic_hash": ""
   },
+  "app/api/google/install/route.ts": {
+    "mtime": 1793821891.2084644,
+    "seen": 1793821968.3967056,
+    "ast_hash": "4a379d9cc0d683ef48dddf099b8f6d58",
+    "semantic_hash": ""
+  },
+  "app/api/google/oauth/route.ts": {
+    "mtime": 1793821891.2114747,
+    "seen": 1793821968.3967087,
+    "ast_hash": "b128fcddea49b13e1c0f6f90e779f7db",
+    "semantic_hash": ""
+  },
+  "lib/channels/email-connect.ts": {
+    "mtime": 1793821859.7931426,
+    "seen": 1793821968.396779,
+    "ast_hash": "914febc44fe9f764ff9e5e307e8e52ea",
+    "semantic_hash": ""
+  },
+  "lib/channels/email-poll.ts": {
+    "mtime": 1793821859.7955546,
+    "seen": 1793821968.3967838,
+    "ast_hash": "76baf844a59d79a5bb565e079c85db70",
+    "semantic_hash": ""
+  },
+  "lib/channels/email.test.ts": {
+    "mtime": 1793821940.543739,
+    "seen": 1793821968.3967862,
+    "ast_hash": "dafedd797f457370486055037d8a27c9",
+    "semantic_hash": ""
+  },
+  "lib/channels/email.ts": {
+    "mtime": 1793821940.5488527,
+    "seen": 1793821968.3967881,
+    "ast_hash": "3951e0c66f23f2424e0296b8df0ad184",
+    "semantic_hash": ""
+  },
+  "lib/channels/oauth-state.ts": {
+    "mtime": 1793821859.7684016,
+    "seen": 1793821968.3967986,
+    "ast_hash": "1eb350af6cf93a03ab5b2eac0c171d21",
+    "semantic_hash": ""
+  },
+  "docs/EMAIL_SETUP.md": {
+    "mtime": 1793821966.8004625,
+    "seen": 1793821968.3969223,
+    "ast_hash": "ca2371d3fc8ffee3a40164e37fd7fcec",
+    "semantic_hash": ""
+  },
   "package-lock.json": {
-    "mtime": 1793821260.9306908,
-    "seen": 1793821584.9274917,
-    "ast_hash": "8c2c157c903c3a4198aa0e59c44173a0",
+    "mtime": 1793821781.5284667,
+    "seen": 1793821968.3969355,
+    "ast_hash": "58236242a89e5b1315c0aa984408788f",
     "semantic_hash": ""
   }
 }

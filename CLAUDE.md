@@ -34,7 +34,7 @@ Approved: one tenant per user; a conversation counts once per calendar month.
 ## Architecture summary
 Details: `docs/ARCHITECTURE.md`. Schema: `docs/DATA_MODEL.md`.
 - One Next.js app. Webhooks in `app/api/webhooks/{whatsapp,slack,email,razorpay}`.
-- Channels share one adapter interface in `lib/channels/types.ts`; each channel is
+- Channels share one adapter interface in `lib/channels/types.ts` (whatsapp, slack, email live); each channel is
   one file (`whatsapp.ts`, `slack.ts`, `email.ts`) plus a mock. New channel = one adapter.
 - Webhook → verify signature → dedupe (`webhook_events`) → store message → enqueue
   Inngest event → 200 fast. AI, sends and reminders run in Inngest functions.
@@ -73,7 +73,7 @@ Details: `docs/ARCHITECTURE.md`. Schema: `docs/DATA_MODEL.md`.
 - DB access: `asUser(userId, fn)` (RLS applies) or `asService(fn)` (bypasses RLS) in `lib/db.ts`.
 
 ## Milestones
-M0 plan/docs ✅ approved · M1 scaffold+auth+RLS · M2 cost ledger · M3 inbox UI · M4 WhatsApp ·
+M0 plan/docs ✅ approved · M1–M9 ✅ (see docs/HANDOFF.md) · M1 scaffold+auth+RLS · M2 cost ledger · M3 inbox UI · M4 WhatsApp ·
 M5 RAG+AI · M6 Slack · M7 Email · M8 leads/reminders · M9 usage/audit/deletion ·
 M10 admin console · M11 Razorpay/GST · M12 pilot report · M13 hardening.
 

@@ -1,9 +1,7 @@
 {
   "0": "Project Spec and Rules",
   "1": "Package Dependencies",
-  "2": "Auth Actions and Pages",
   "3": "Database Schema",
-  "4": "DB Access Helpers",
   "5": "TypeScript Config",
   "7": "Local DB Reset",
   "8": "NPM Scripts",
