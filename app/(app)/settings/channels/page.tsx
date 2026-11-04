@@ -1,4 +1,4 @@
-import { checkEmailNow, connectImap, connectWhatsApp, setSlackChannel, setTemplates } from "@/app/actions/channels";
+import { checkEmailNow, connectImap, connectWhatsApp, setSlackChannel, setTemplates, testConnection } from "@/app/actions/channels";
 import { templatesOf } from "@/lib/channels/templates";
 import { requireMember } from "@/lib/auth";
 import { asUser } from "@/lib/db";
@@ -7,6 +7,7 @@ const MSG: Record<string, string> = {
   slack: "Slack connected.", slack_denied: "Slack install was cancelled.", slack_failed: "Slack install failed. Is this workspace already connected to another business?",
   gmail: "Gmail connected.", gmail_denied: "Google sign-in was cancelled.", gmail_failed: "Gmail connection failed.",
   templates_invalid: "Each template line must be: name,language,category (e.g. appointment_reminder,en,utility).",
+  test_ok: "Connection test passed.", test_failed: "Connection test failed: see the error under the channel.",
   whatsapp: "WhatsApp connected.", whatsapp_failed: "WhatsApp test failed: check the Phone number ID and token (and that this number isn't used by another business).",
   imap: "Email connected.", imap_invalid: "Please fill in every email field.", imap_failed: "Could not log in to IMAP/SMTP with those settings.",
 };
@@ -20,12 +21,22 @@ export default async function ChannelsPage({ searchParams }: { searchParams: Pro
     <main className="mx-auto max-w-3xl space-y-4 p-6">
       <h1 className="text-xl font-semibold">Channels</h1>
       {(sp.connected || sp.error) && <p className={`text-sm ${sp.error ? "text-red-600" : "text-emerald-700"}`}>{MSG[sp.connected ?? sp.error] ?? sp.error}</p>}
+      <ul className="flex flex-wrap gap-2 text-sm">
+        {(["whatsapp", "slack", "email"] as const).map((type) => {
+          const status = channels.find((c) => c.type === type)?.status ?? "not_connected";
+          const color = status === "connected" ? "bg-emerald-100 text-emerald-800" : status === "error" ? "bg-red-100 text-red-800" : status === "pending" ? "bg-amber-100 text-amber-900" : "bg-slate-100 text-slate-600";
+          return <li key={type} className={`rounded px-2 py-1 capitalize ${color}`}>{type}: {status.replace("_", " ")}</li>;
+        })}
+      </ul>
       <ul className="card divide-y divide-slate-100 p-0">
         {channels.length === 0 && <li className="p-4 text-sm text-slate-500">No channels connected yet.</li>}
         {channels.map((c) => (
           <li key={c.id} className="space-y-2 p-4 text-sm">
             <p><span className="font-medium capitalize">{c.type}</span> · {c.status} · <span className="text-slate-500">{c.config?.team_name ?? c.config?.display_phone ?? c.config?.address ?? c.external_id}</span></p>
             {c.last_error && <p className="text-red-600">{c.last_error}</p>}
+            {owner && (
+              <form action={testConnection}><input type="hidden" name="channelId" value={c.id} /><button className="btn-ghost">Test connection</button></form>
+            )}
             {c.type === "whatsapp" && (
               <form action={setTemplates} className="space-y-1">
                 <input type="hidden" name="channelId" value={c.id} />

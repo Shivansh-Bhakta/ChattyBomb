@@ -46,6 +46,9 @@ function productionProblems(e: Record<string, string | undefined>): string[] {
   need("SUPABASE_SERVICE_ROLE_KEY", (v) => token.test(v) && v !== e.NEXT_PUBLIC_SUPABASE_ANON_KEY, "non-empty token, different from the anon key");
   need("ANTHROPIC_API_KEY", (v) => /^sk-ant-\S{10,}$/.test(v), "starts with sk-ant-");
   need("VOYAGE_API_KEY", (v) => token.test(v), "non-empty token without spaces");
+  // Without these, Inngest cannot verify that job calls come from Inngest.
+  need("INNGEST_SIGNING_KEY", (v) => /^signkey-\S{10,}$/.test(v), "starts with signkey-");
+  need("INNGEST_EVENT_KEY", (v) => token.test(v), "non-empty token without spaces");
   return p;
 }
 
