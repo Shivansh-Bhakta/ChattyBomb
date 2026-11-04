@@ -47,7 +47,7 @@ Built unattended in mock mode. No real Supabase, Meta, Slack, Google, Voyage or 
   - 80%/100% email alerts, inbox pagination past 100
 - **Mock vs real AI**: mock classifier, answerer and embeddings are lexical stand-ins. `npm run eval` scores 18/20 in mock mode; the real score is unknown.
 - **Refusal fallbacks**: the Anthropic refusal fallback (`fallbacks`) is not enabled. A refusal is treated as a handoff to a human.
-- **Thinking cost**: answers use `claude-opus-5-5` at effort `low` (configurable via `AI_ANSWER_MODEL`). Opus 5.5 can't disable thinking, so thinking tokens are billed as output.
+- **Thinking cost**: answers use `claude-sonnet-5-5` at effort `low` since the review-fix session (was `claude-opus-5-5`; configurable via `AI_ANSWER_MODEL`). Thinking stays on, so thinking tokens are billed as output.
 - **Prompt caching**: the system prompt is short, below the model's minimum cacheable prefix, so caching probably only applies to large retrieved context.
 - **UI coverage**: server actions are covered by Playwright smoke runs, not unit tests. Realtime inbox refresh is untested.
 - **Graph**: `/graphify .` ran once in full (docs plus code) after M1. Later milestones used `graphify update .` (code only, free); docs changed since M1 aren't re-extracted.
