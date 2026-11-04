@@ -11,7 +11,11 @@ You are the lead engineer building **ChattyBomb Omni**: a multi-tenant SaaS wher
 
 ## 1. Token-efficiency rules (follow strictly)
 1. Keep `CLAUDE.md` under 150 lines: these rules, architecture summary, conventions. Read this spec only by section, never whole, once M0 is done.
-2. **Smallest complete change (ponytail principle):** make the smallest change that fully works. No speculative abstractions, unused config, or "future-proof" layers. Patch with targeted diffs; never re-output whole files you only need to edit.
+2. Follow ponytail-AGENTS.md (the Ponytail rules) for every change: reuse what
+   exists, prefer the standard library or platform feature, write the minimum
+   that works plus one small test for risky logic (billing, auth, tenant
+   isolation, webhooks). Never cut validation, security or error handling.
+   End each reply by stating what was skipped or not checked.
 3. **Use the code graph before reading files.** After every milestone run `/graphify .`. Query the graph (what calls this, what breaks if it changes) and open only the files it points to. No broad greps, no catting large files.
 4. Work milestone by milestone. After each: run tests, commit, print a 5-line summary, then STOP and wait for me to say "next".
 5. Terse replies. Do not restate my request or re-print code you wrote. Report only: what changed, how to run it, what's next.
