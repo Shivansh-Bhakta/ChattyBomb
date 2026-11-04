@@ -29,7 +29,7 @@ export async function exchangeCode(code: string, mockTeamId = "T_MOCK"): Promise
 
 /** Stores the install encrypted. A workspace already connected to another tenant is refused. */
 export async function saveInstall(tenantId: string, userId: string, i: Install) {
-  return asService(async (db) => {
+  return asService(async (db) => { // scope: tenant (on-conflict update guarded by tenant_id)
     const { rows: [ch] } = await db.query(
       `insert into channels (tenant_id, type, provider, status, external_id, config, credentials_encrypted, connected_by, connected_at)
        values ($1, 'slack', 'slack', 'connected', $2, $3, $4, $5, now())

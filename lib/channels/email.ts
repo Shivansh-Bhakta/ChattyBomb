@@ -84,7 +84,7 @@ export const email: ChannelAdapter = {
     if (!target.credentials) throw new Error("email channel has no credentials");
     const address = target.channelExternalId;
     // Reply headers come from the latest customer email in this thread.
-    const { rows: [last] } = await asService((db) => db.query(
+    const { rows: [last] } = await asService((db) => db.query( // scope: webhook-lookup (channel external_id is unique, so this is one tenant's thread)
       `select m.email_message_id, m.body from messages m join conversations c on c.id = m.conversation_id join channels ch on ch.id = c.channel_id
         where ch.type = 'email' and ch.external_id = $1 and c.external_thread_id = $2 and m.direction = 'inbound'
         order by m.created_at desc limit 1`, [address, target.threadId]));

@@ -42,7 +42,7 @@ export async function testImap(c: z.infer<typeof imapCreds>) {
 
 /** Stores an email channel with encrypted credentials. An address connected to another tenant is refused. */
 export async function saveEmailChannel(tenantId: string, userId: string, provider: "gmail" | "imap", address: string, creds: object) {
-  return asService(async (db) => {
+  return asService(async (db) => { // scope: tenant (on-conflict update guarded by tenant_id)
     const { rows: [ch] } = await db.query(
       `insert into channels (tenant_id, type, provider, status, external_id, config, credentials_encrypted, connected_by, connected_at)
        values ($1, 'email', $2, 'connected', $3, $4, $5, $6, now())

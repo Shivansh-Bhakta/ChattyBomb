@@ -28,7 +28,7 @@ export async function login(form: FormData) {
 export async function signup(form: FormData) {
   const { email, password } = creds.parse(Object.fromEntries(form));
   if (mockAuthAllowed()) {
-    const { rows } = await asService((db) =>
+    const { rows } = await asService((db) => // scope: mock-auth (MOCK_MODE only)
       db.query("insert into auth.users (email) values ($1) on conflict (email) do nothing returning id", [email]),
     );
     if (!rows[0]) redirect("/signup?error=exists");

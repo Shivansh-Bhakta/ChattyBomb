@@ -16,7 +16,7 @@ export type Outcome = "skipped" | "replied" | "handoff";
  * Safe to retry: skips when a reply after this message already exists.
  */
 export async function processInbound({ tenantId, messageId }: { tenantId: string; messageId: string }): Promise<{ outcome: Outcome; reason?: string }> {
-  const ctx = await asService(async (db) => {
+  const ctx = await asService(async (db) => { // scope: tenant
     const { rows: [m] } = await db.query(
       `select m.id, m.body, m.created_at, m.conversation_id, c.status, c.ai_paused, ch.type as channel,
               t.status as tenant_status, t.conversation_limit, t.overage_policy,
@@ -30,9 +30,9 @@ export async function processInbound({ tenantId, messageId }: { tenantId: string
     const skip = m.ai_paused ? "ai_paused" : m.status === "needs_human" ? "already_with_human" : m.already_replied ? "already_replied"
       : !["pilot", "active"].includes(m.tenant_status) ? "tenant_inactive" : over ? "over_limit" : null;
     const { rows: history } = await db.query(
-      `select direction, sender_type, body from messages where conversation_id = $1 and direction <> 'note' and created_at <= (select created_at from messages where id = $2)
+      `select direction, sender_type, body from messages where conversation_id = $1 and tenant_id = $3 and direction <> 'note' and created_at <= (select created_at from messages where id = $2)
         order by created_at desc limit 10`,
-      [m.conversation_id, m.id],
+      [m.conversation_id, m.id, tenantId],
     );
     return { m, skip, transcript: history.reverse().map((h) => `${h.direction === "inbound" ? "Customer" : "Business"}: ${h.body}`).join("\n") };
   });
@@ -43,16 +43,16 @@ export async function processInbound({ tenantId, messageId }: { tenantId: string
   const meter = (db: Db, u: Usage) => (u ? recordAnthropicUsage(db, base, u.model, u.usage) : Promise.resolve());
 
   const c = await classify(transcript);
-  const chunks = await asService(async (db) => {
+  const chunks = await asService(async (db) => { // scope: tenant
     await meter(db, c.usage);
-    await db.query(`update messages set intent = $2 where id = $1`, [m.id, c.result.intent]);
+    await db.query(`update messages set intent = $2 where id = $1 and tenant_id = $3`, [m.id, c.result.intent, tenantId]);
     if (c.result.intent === "sales_lead" || c.result.intent === "booking") {
       await db.query(
         `insert into leads (tenant_id, contact_id, conversation_id, name, phone, email, intent, source_channel)
          select c.tenant_id, c.contact_id, c.id, ct.name, ct.phone, ct.email, $2, $3
-           from conversations c join contacts ct on ct.id = c.contact_id where c.id = $1
+           from conversations c join contacts ct on ct.id = c.contact_id where c.id = $1 and c.tenant_id = $4
          on conflict (conversation_id) where conversation_id is not null do nothing`,
-        [m.conversation_id, c.result.intent, m.channel],
+        [m.conversation_id, c.result.intent, m.channel, tenantId],
       );
     }
     const needsDocs = c.result.intent !== "refund_complaint" && !c.result.sensitive;
@@ -63,15 +63,15 @@ export async function processInbound({ tenantId, messageId }: { tenantId: string
   if (pre.handoff) return handoff(base, m.id, pre.reason, c.result.summary);
 
   const a = await answer(m.body, transcript, c.result.language, chunks);
-  await asService(async (db) => {
+  await asService(async (db) => { // scope: tenant
     await meter(db, a.usage);
-    await db.query(`update messages set ai_confidence = $2 where id = $1`, [m.id, a.result.confidence]);
+    await db.query(`update messages set ai_confidence = $2 where id = $1 and tenant_id = $3`, [m.id, a.result.confidence, tenantId]);
   });
   const post = afterAnswer(a.result, env().AI_MIN_CONFIDENCE);
   if (post.handoff) return handoff(base, m.id, post.reason, c.result.summary);
 
   const sent = await sendMessage(tenantId, base.conversationId, { kind: "text", text: a.result.answer }, { type: "ai" });
-  await asService((db) => db.query(
+  await asService((db) => db.query( // scope: tenant
     `insert into audit_log (tenant_id, actor_type, action, target_type, target_id, metadata) values ($1, 'ai', 'ai.reply', 'message', $2, $3)`,
     [tenantId, sent.messageId, { inbound_message_id: m.id, intent: c.result.intent, confidence: a.result.confidence, top_score: chunks[0]?.score }],
   ));
@@ -79,7 +79,7 @@ export async function processInbound({ tenantId, messageId }: { tenantId: string
 }
 
 async function handoff(base: { tenantId: string; conversationId: string }, messageId: string, reason: string, summary: string): Promise<{ outcome: Outcome; reason: string }> {
-  await asService(async (db) => {
+  await asService(async (db) => { // scope: tenant
     await db.query(`update conversations set status = 'needs_human', summary = $3 where id = $1 and tenant_id = $2`, [base.conversationId, base.tenantId, summary.slice(0, 1000)]);
     await db.query(
       `insert into audit_log (tenant_id, actor_type, action, target_type, target_id, metadata) values ($1, 'ai', 'ai.handoff', 'conversation', $2, $3)`,
